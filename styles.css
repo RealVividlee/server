@@ -216,6 +216,35 @@ button:hover {
   font: inherit;
 }
 
+
+.delivery-fieldset {
+  border: 1px solid #dcc3a3;
+  border-radius: 9px;
+  padding: 0.65rem 0.75rem;
+  margin: 0;
+}
+
+.delivery-fieldset legend {
+  padding: 0 0.35rem;
+  color: var(--ink-light);
+  font-weight: 700;
+}
+
+.choice-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.choice-row:first-of-type {
+  margin-top: 0.15rem;
+}
+
+.choice-row input[type="radio"] {
+  accent-color: var(--accent);
+}
+
 .quote-form input,
 .quote-form select {
   padding: 0.65rem;

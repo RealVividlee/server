@@ -129,6 +129,23 @@
               </select>
             </label>
 
+            <fieldset class="delivery-fieldset">
+              <legend>Delivery method</legend>
+              <label class="choice-row">
+                <input type="radio" name="delivery" value="ship" checked />
+                Ship to me
+              </label>
+              <label class="choice-row">
+                <input type="radio" name="delivery" value="pickup" />
+                Local pickup (free)
+              </label>
+            </fieldset>
+
+            <label>
+              Upload 3D file (optional)
+              <input type="file" id="modelFile" name="modelFile" accept=".stl,.obj,.3mf" />
+            </label>
+
             <label>
               Email for follow-up
               <input type="email" id="email" name="email" placeholder="you@example.com" required />

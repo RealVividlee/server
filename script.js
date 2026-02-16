@@ -24,6 +24,8 @@ form.addEventListener('submit', (event) => {
   const quantity = Number(document.getElementById('quantity').value);
   const weight = Number(document.getElementById('weight').value);
   const finish = document.getElementById('finish').value;
+  const delivery = document.querySelector('input[name="delivery"]:checked').value;
+  const hasUploadedFile = document.getElementById('modelFile').files.length > 0;
 
   if (!projectName || quantity <= 0 || weight <= 0) {
     result.textContent = 'Please enter a valid project name, quantity, and weight.';
@@ -34,7 +36,7 @@ form.addEventListener('submit', (event) => {
   const unitWithFinish = baseUnit * finishMultiplier[finish];
   const subtotal = unitWithFinish * quantity;
   const setupHelpFee = subtotal < 25 ? 4 : 0;
-  const shipping = subtotal >= 90 ? 0 : 8;
+  const shipping = delivery === 'pickup' ? 0 : subtotal >= 90 ? 0 : 8;
   const total = subtotal + setupHelpFee + shipping;
   const leadTimeDays = finish === 'premium' ? 'about 4–6 business days' : 'about 2–4 business days';
 
@@ -44,9 +46,10 @@ form.addEventListener('submit', (event) => {
   });
 
   const feeText = setupHelpFee > 0 ? ` + ${currency.format(setupHelpFee)} small-order setup` : '';
-  const shippingText = shipping === 0 ? 'free shipping' : `${currency.format(shipping)} shipping`;
+  const shippingText = delivery === 'pickup' ? 'local pickup' : shipping === 0 ? 'free shipping' : `${currency.format(shipping)} shipping`;
+  const fileText = hasUploadedFile ? 'File received.' : 'No file uploaded yet.';
 
   result.textContent = `${projectName}: estimated ${currency.format(total)} (${currency.format(
     subtotal,
-  )} print cost${feeText}, ${shippingText}). Lead time is ${leadTimeDays}. We'll email you to confirm details before printing.`;
+  )} print cost${feeText}, ${shippingText}). Lead time is ${leadTimeDays}. ${fileText} We'll email you to confirm details before printing.`;
 });
