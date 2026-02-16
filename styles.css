@@ -1,0 +1,275 @@
+:root {
+  --bg: #fffaf3;
+  --surface: #ffffff;
+  --surface-soft: #fff3e3;
+  --ink: #2f241b;
+  --ink-light: #69584c;
+  --accent: #b45f06;
+  --accent-dark: #8e4a03;
+  --line: #edd8bf;
+  --radius: 14px;
+  --shadow: 0 12px 24px rgba(89, 64, 41, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+.container {
+  width: min(1040px, 92%);
+  margin: 0 auto;
+}
+
+.site-header {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(6px);
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 70px;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.nav-list {
+  list-style: none;
+  display: flex;
+  gap: 1.15rem;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-list a {
+  text-decoration: none;
+  color: var(--ink-light);
+  font-weight: 700;
+}
+
+.hero {
+  padding: 4rem 0 2.75rem;
+}
+
+.hero-grid {
+  display: grid;
+  gap: 1.4rem;
+  grid-template-columns: 1.3fr 1fr;
+  align-items: center;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+h1 {
+  font-size: clamp(2rem, 3.8vw, 3rem);
+  line-height: 1.12;
+  margin: 0.5rem 0 0.9rem;
+}
+
+.hero-copy {
+  color: var(--ink-light);
+  max-width: 56ch;
+  margin-bottom: 1.4rem;
+}
+
+.cta {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  padding: 0.78rem 1.2rem;
+  border-radius: 11px;
+  font-weight: 800;
+}
+
+.cta:hover,
+button:hover {
+  background: var(--accent-dark);
+}
+
+.hero-card,
+.testimonial-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 1.2rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.hero-card h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+.owner-meta {
+  color: var(--ink-light);
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.section {
+  padding: 2.6rem 0;
+}
+
+.section h2 {
+  margin-top: 0;
+  font-size: 1.75rem;
+}
+
+.section-alt {
+  background: var(--surface-soft);
+  border-block: 1px solid var(--line);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.steps article {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.steps span {
+  display: inline-flex;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+}
+
+.steps h3 {
+  margin-bottom: 0.35rem;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.bullets {
+  padding-left: 1.1rem;
+  color: var(--ink-light);
+}
+
+.quote-intro {
+  color: var(--ink-light);
+  margin-top: -0.2rem;
+  margin-bottom: 1rem;
+}
+
+.quote-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  background: var(--surface);
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.quote-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 700;
+  color: var(--ink-light);
+}
+
+.quote-form input,
+.quote-form select,
+.quote-form button {
+  font: inherit;
+}
+
+.quote-form input,
+.quote-form select {
+  padding: 0.65rem;
+  border-radius: 9px;
+  border: 1px solid #dcc3a3;
+  background: #fff;
+}
+
+.quote-form button {
+  grid-column: 1 / -1;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+}
+
+.quote-result {
+  margin-top: 1rem;
+  background: #3d2d1f;
+  color: #fff8ef;
+  padding: 0.95rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.footer-inner {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  color: var(--ink-light);
+}
+
+@media (max-width: 930px) {
+  .hero-grid,
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .nav-list {
+    display: none;
+  }
+
+  .steps,
+  .quote-form {
+    grid-template-columns: 1fr;
+  }
+}
