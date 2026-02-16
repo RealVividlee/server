@@ -112,7 +112,9 @@ button:hover {
 }
 
 .hero-card,
-.testimonial-card {
+.testimonial-card,
+.faq-grid details,
+.quote-next-steps {
   background: var(--surface);
   border: 1px solid var(--line);
   padding: 1.2rem;
@@ -216,7 +218,6 @@ button:hover {
   font: inherit;
 }
 
-
 .delivery-fieldset {
   border: 1px solid #dcc3a3;
   border-radius: 9px;
@@ -273,6 +274,56 @@ button:hover {
   font-weight: 700;
 }
 
+.quote-breakdown {
+  margin: 0.45rem 0 0;
+  padding: 0.8rem 1rem;
+  border-radius: 9px;
+  border: 1px dashed #c9a97f;
+  background: rgba(255, 248, 238, 0.4);
+  color: #ffeed7;
+  font-weight: 600;
+}
+
+.quote-breakdown li + li {
+  margin-top: 0.3rem;
+}
+
+.quote-next-steps {
+  margin-top: 1rem;
+  box-shadow: none;
+}
+
+.quote-next-steps h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.quote-next-steps ol {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--ink-light);
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.faq-grid details {
+  box-shadow: none;
+}
+
+.faq-grid summary {
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.faq-grid p {
+  margin-bottom: 0;
+  color: var(--ink-light);
+}
+
 .site-footer {
   border-top: 1px solid var(--line);
   background: var(--surface);
@@ -287,7 +338,8 @@ button:hover {
 
 @media (max-width: 930px) {
   .hero-grid,
-  .about-grid {
+  .about-grid,
+  .faq-grid {
     grid-template-columns: 1fr;
   }
 }

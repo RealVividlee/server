@@ -10,8 +10,17 @@ const finishMultiplier = {
   premium: 1.2,
 };
 
+const useCaseNotes = {
+  prototype: 'Prototype jobs are usually quick for us.',
+  replacement: 'Replacement parts get an extra fit check note before print.',
+  display: 'Display models may benefit from premium cleanup for smoother surfaces.',
+  gift: 'Gift projects can include simple cleanup touches upon request.',
+  other: 'We can review custom project needs by email.',
+};
+
 const form = document.getElementById('quote-form');
 const result = document.getElementById('quote-result');
+const nextSteps = document.getElementById('quote-next-steps');
 const year = document.getElementById('year');
 
 year.textContent = new Date().getFullYear();
@@ -24,11 +33,13 @@ form.addEventListener('submit', (event) => {
   const quantity = Number(document.getElementById('quantity').value);
   const weight = Number(document.getElementById('weight').value);
   const finish = document.getElementById('finish').value;
+  const useCase = document.getElementById('useCase').value;
   const delivery = document.querySelector('input[name="delivery"]:checked').value;
   const hasUploadedFile = document.getElementById('modelFile').files.length > 0;
 
   if (!projectName || quantity <= 0 || weight <= 0) {
     result.textContent = 'Please enter a valid project name, quantity, and weight.';
+    nextSteps.hidden = true;
     return;
   }
 
@@ -45,11 +56,14 @@ form.addEventListener('submit', (event) => {
     currency: 'USD',
   });
 
-  const feeText = setupHelpFee > 0 ? ` + ${currency.format(setupHelpFee)} small-order setup` : '';
-  const shippingText = delivery === 'pickup' ? 'local pickup' : shipping === 0 ? 'free shipping' : `${currency.format(shipping)} shipping`;
+  const shippingText = delivery === 'pickup' ? 'Local pickup selected' : shipping === 0 ? 'Free shipping' : `${currency.format(shipping)} shipping`;
   const fileText = hasUploadedFile ? 'File received.' : 'No file uploaded yet.';
+  const safeProjectName = projectName
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 
-  result.textContent = `${projectName}: estimated ${currency.format(total)} (${currency.format(
-    subtotal,
-  )} print cost${feeText}, ${shippingText}). Lead time is ${leadTimeDays}. ${fileText} We'll email you to confirm details before printing.`;
+  result.innerHTML = `${safeProjectName}: estimated <strong>${currency.format(total)}</strong> with a lead time of ${leadTimeDays}. ${fileText} ${useCaseNotes[useCase]}\n    <ul class="quote-breakdown">\n      <li>Print cost: ${currency.format(subtotal)}</li>\n      <li>Small-order setup: ${currency.format(setupHelpFee)}</li>\n      <li>${shippingText}</li>\n      <li><strong>Total: ${currency.format(total)}</strong></li>\n    </ul>`;
+
+  nextSteps.hidden = false;
 });

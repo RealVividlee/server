@@ -15,6 +15,7 @@
             <li><a href="#how-it-works">How it works</a></li>
             <li><a href="#about">About us</a></li>
             <li><a href="#quote">Request a quote</a></li>
+            <li><a href="#faq">FAQ</a></li>
           </ul>
         </nav>
       </div>
@@ -129,6 +130,17 @@
               </select>
             </label>
 
+            <label>
+              What is this print for?
+              <select id="useCase" name="useCase" required>
+                <option value="prototype">Prototype</option>
+                <option value="replacement">Replacement part</option>
+                <option value="display">Display model</option>
+                <option value="gift">Gift / personal project</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+
             <fieldset class="delivery-fieldset">
               <legend>Delivery method</legend>
               <label class="choice-row">
@@ -156,6 +168,39 @@
 
           <div class="quote-result" id="quote-result" aria-live="polite">
             Fill in your details and we'll show a quick estimate.
+          </div>
+
+          <div class="quote-next-steps" id="quote-next-steps" hidden>
+            <h3>What happens next</h3>
+            <ol>
+              <li>We review your file and use case details.</li>
+              <li>We confirm final print settings by email.</li>
+              <li>Once approved, we print and message updates.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="faq">
+        <div class="container">
+          <h2>Quick FAQ</h2>
+          <div class="faq-grid">
+            <details>
+              <summary>What file types do you accept?</summary>
+              <p>STL, OBJ, and 3MF are supported right now.</p>
+            </details>
+            <details>
+              <summary>Can you help me choose material?</summary>
+              <p>Yes. Tell us how the part will be used and we will recommend the best option.</p>
+            </details>
+            <details>
+              <summary>Do you do very small orders?</summary>
+              <p>Absolutely — one-off prints are a big part of what we do.</p>
+            </details>
+            <details>
+              <summary>Can I pick up locally?</summary>
+              <p>Yes, choose local pickup in the quote form and shipping is removed.</p>
+            </details>
           </div>
         </div>
       </section>
