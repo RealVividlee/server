@@ -137,6 +137,32 @@
           <h2>Request your quote</h2>
           <p class="quote-intro">No big minimums. Tell us what you need and we'll estimate it instantly.</p>
 
+
+          <div class="quote-tools">
+            <p class="tool-title">Start fast with a template:</p>
+            <div class="preset-buttons" role="group" aria-label="Preset project types">
+              <button type="button" class="preset-btn" data-preset="replacement">Replacement part</button>
+              <button type="button" class="preset-btn" data-preset="prototype">Prototype batch</button>
+              <button type="button" class="preset-btn" data-preset="display">Display model</button>
+            </div>
+            <label class="checkbox-row beginner-toggle">
+              <input type="checkbox" id="beginnerMode" />
+              I'm new to 3D printing — simplify this form
+            </label>
+            <p class="beginner-hint" id="beginner-hint" hidden>
+              Beginner mode is on. We hid advanced pricing options and set safe defaults.
+            </p>
+          </div>
+
+          <details class="term-guide">
+            <summary>What do these terms mean?</summary>
+            <ul>
+              <li><strong>Material:</strong> the type of plastic/resin used for the part.</li>
+              <li><strong>Finish level:</strong> how much post-print cleanup we do for smoother surfaces.</li>
+              <li><strong>Weight (grams):</strong> how much filament/resin the part roughly uses.</li>
+            </ul>
+          </details>
+
           <form class="quote-form" id="quote-form">
             <label>
               Project name
@@ -153,7 +179,7 @@
               </select>
             </label>
 
-            <label>
+            <label class="advanced-field">
               Color profile
               <select id="colorProfile" name="colorProfile" required>
                 <option value="standard">Standard color</option>
@@ -173,7 +199,7 @@
               <small class="field-help">Not sure? Keep the default and we will fine-tune after file review.</small>
             </label>
 
-            <label>
+            <label class="advanced-field">
               Finish level
               <select id="finish" name="finish" required>
                 <option value="standard">Standard</option>
@@ -216,19 +242,19 @@
               <input type="email" id="email" name="email" placeholder="you@example.com" required />
             </label>
 
-            <label>
+            <label class="advanced-field">
               Promo code (optional)
               <input type="text" id="promoCode" name="promoCode" placeholder="WELCOME10" maxlength="20" />
             </label>
 
-            <p class="promo-status" id="promo-status" aria-live="polite">Try WELCOME10 or MAKER5.</p>
+            <p class="promo-status advanced-field" id="promo-status" aria-live="polite">Try WELCOME10 or MAKER5.</p>
 
-            <label class="checkbox-row">
+            <label class="checkbox-row advanced-field">
               <input type="checkbox" id="rush" name="rush" />
               Rush production (1–2 business days, +35%)
             </label>
 
-            <label class="checkbox-row">
+            <label class="checkbox-row advanced-field">
               <input type="checkbox" id="designHelp" name="designHelp" />
               Need printability/design review (+$12)
             </label>

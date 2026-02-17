@@ -49,6 +49,10 @@ const finishInput = document.getElementById('finish');
 const useCaseInput = document.getElementById('useCase');
 const emailInput = document.getElementById('email');
 const modelFileInput = document.getElementById('modelFile');
+const beginnerModeCheckbox = document.getElementById('beginnerMode');
+const beginnerHint = document.getElementById('beginner-hint');
+const presetButtons = document.querySelectorAll('.preset-btn');
+const advancedFields = document.querySelectorAll('.advanced-field');
 
 let draftSaveTimeout;
 
@@ -173,6 +177,7 @@ const persistDraft = () => {
     promoCode: promoInput.value,
     rush: rushCheckbox.checked,
     designHelp: designHelpCheckbox.checked,
+    beginnerMode: beginnerModeCheckbox.checked,
   };
 
   try {
@@ -215,6 +220,7 @@ const loadDraft = () => {
     promoInput.value = draft.promoCode ?? '';
     rushCheckbox.checked = Boolean(draft.rush);
     designHelpCheckbox.checked = Boolean(draft.designHelp);
+    beginnerModeCheckbox.checked = Boolean(draft.beginnerMode);
 
     const delivery = draft.delivery === 'pickup' ? 'pickup' : 'ship';
     const deliveryInput = document.querySelector(`input[name="delivery"][value="${delivery}"]`);
@@ -224,6 +230,7 @@ const loadDraft = () => {
     }
 
     setDraftStatus('Loaded your saved draft.');
+    applyBeginnerMode(beginnerModeCheckbox.checked);
   } catch (error) {
     setDraftStatus('Could not load saved draft. Starting fresh.');
   }
@@ -243,8 +250,72 @@ const clearDraft = () => {
     shipOption.checked = true;
   }
 
+  beginnerModeCheckbox.checked = false;
+  applyBeginnerMode(false);
   setDraftStatus('Saved draft cleared.');
   nextSteps.hidden = true;
+  renderLiveEstimate();
+};
+
+
+const applyBeginnerMode = (enabled) => {
+  advancedFields.forEach((field) => {
+    field.hidden = enabled;
+  });
+
+  beginnerHint.hidden = !enabled;
+
+  if (enabled) {
+    colorProfileInput.value = 'standard';
+    finishInput.value = 'standard';
+    promoInput.value = '';
+    rushCheckbox.checked = false;
+    designHelpCheckbox.checked = false;
+  }
+};
+
+const applyPreset = (presetName) => {
+  const presets = {
+    replacement: {
+      projectName: 'Replacement hinge clip',
+      material: 'PETG',
+      quantity: '2',
+      weight: '45',
+      finish: 'standard',
+      useCase: 'replacement',
+    },
+    prototype: {
+      projectName: 'Prototype housing test set',
+      material: 'PLA',
+      quantity: '8',
+      weight: '70',
+      finish: 'standard',
+      useCase: 'prototype',
+    },
+    display: {
+      projectName: 'Display figurine',
+      material: 'Resin',
+      quantity: '1',
+      weight: '55',
+      finish: 'premium',
+      useCase: 'display',
+    },
+  };
+
+  const preset = presets[presetName];
+
+  if (!preset) {
+    return;
+  }
+
+  projectNameInput.value = preset.projectName;
+  materialInput.value = preset.material;
+  quantityInput.value = preset.quantity;
+  weightInput.value = preset.weight;
+  finishInput.value = preset.finish;
+  useCaseInput.value = preset.useCase;
+
+  scheduleDraftSave();
   renderLiveEstimate();
 };
 
@@ -301,6 +372,13 @@ const handleFormUpdate = () => {
 form.addEventListener('input', handleFormUpdate);
 form.addEventListener('change', handleFormUpdate);
 clearDraftButton.addEventListener('click', clearDraft);
+beginnerModeCheckbox.addEventListener('change', () => {
+  applyBeginnerMode(beginnerModeCheckbox.checked);
+  handleFormUpdate();
+});
+presetButtons.forEach((button) => {
+  button.addEventListener('click', () => applyPreset(button.dataset.preset));
+});
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -319,4 +397,5 @@ form.addEventListener('submit', (event) => {
 });
 
 loadDraft();
+applyBeginnerMode(beginnerModeCheckbox.checked);
 renderLiveEstimate();

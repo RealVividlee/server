@@ -232,6 +232,57 @@ button:hover {
   margin-bottom: 1rem;
 }
 
+
+.quote-tools,
+.term-guide {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.tool-title {
+  margin: 0;
+  font-weight: 800;
+}
+
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+.preset-btn {
+  border: 1px solid #d9bea0;
+  background: #fff8ef;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.42rem 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.beginner-toggle {
+  margin-top: 0.7rem;
+}
+
+.beginner-hint {
+  margin: 0.35rem 0 0;
+  color: var(--ink-light);
+  font-weight: 700;
+}
+
+.term-guide summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.term-guide ul {
+  margin: 0.55rem 0 0;
+  color: var(--ink-light);
+}
 .quote-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
