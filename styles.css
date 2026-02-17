@@ -278,6 +278,22 @@ button:hover {
   border: 1px solid #d9bea0;
 }
 
+
+.promo-status {
+  grid-column: 1 / -1;
+  margin: -0.35rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-light);
+  font-weight: 700;
+}
+
+.promo-status.is-valid {
+  color: #2a7a32;
+}
+
+.promo-status.is-invalid {
+  color: #9a2b2b;
+}
 .checkbox-row {
   flex-direction: row !important;
   align-items: center;
@@ -326,6 +342,16 @@ button:hover {
   color: var(--ink-light);
 }
 
+
+.live-breakdown {
+  margin: 0.65rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--ink-light);
+}
+
+.live-breakdown li + li {
+  margin-top: 0.2rem;
+}
 .quote-result {
   margin-top: 1rem;
   background: #3d2d1f;

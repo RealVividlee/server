@@ -32,6 +32,7 @@ const promoCodes = {
 const rushMultiplier = 1.35;
 const designHelpFee = 12;
 const draftStorageKey = 'maple-layer-quote-draft-v1';
+const draftSaveDebounceMs = 250;
 
 const form = document.getElementById('quote-form');
 const result = document.getElementById('quote-result');
@@ -39,12 +40,26 @@ const nextSteps = document.getElementById('quote-next-steps');
 const estimatePreview = document.getElementById('live-estimate-value');
 const estimateTimeline = document.getElementById('live-estimate-time');
 const estimateMeta = document.getElementById('live-estimate-meta');
+const liveBreakdown = document.getElementById('live-breakdown');
 const draftStatus = document.getElementById('draft-status');
+const promoStatus = document.getElementById('promo-status');
 const clearDraftButton = document.getElementById('clearDraft');
 const rushCheckbox = document.getElementById('rush');
 const designHelpCheckbox = document.getElementById('designHelp');
 const promoInput = document.getElementById('promoCode');
 const year = document.getElementById('year');
+
+const projectNameInput = document.getElementById('projectName');
+const materialInput = document.getElementById('material');
+const colorProfileInput = document.getElementById('colorProfile');
+const quantityInput = document.getElementById('quantity');
+const weightInput = document.getElementById('weight');
+const finishInput = document.getElementById('finish');
+const useCaseInput = document.getElementById('useCase');
+const emailInput = document.getElementById('email');
+const modelFileInput = document.getElementById('modelFile');
+
+let draftSaveTimeout;
 
 year.textContent = new Date().getFullYear();
 
@@ -59,92 +74,144 @@ const escapeHtml = (value) =>
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;');
 
-const computeQuote = () => {
-  const projectName = document.getElementById('projectName').value.trim();
-  const material = document.getElementById('material').value;
-  const colorProfile = document.getElementById('colorProfile').value;
-  const quantity = Number(document.getElementById('quantity').value);
-  const weight = Number(document.getElementById('weight').value);
-  const finish = document.getElementById('finish').value;
-  const useCase = document.getElementById('useCase').value;
-  const delivery = document.querySelector('input[name="delivery"]:checked').value;
-  const hasUploadedFile = document.getElementById('modelFile').files.length > 0;
-  const rush = rushCheckbox.checked;
-  const designHelp = designHelpCheckbox.checked;
-  const promoCode = promoInput.value.trim().toUpperCase();
+const getDeliveryValue = () => {
+  const selected = document.querySelector('input[name="delivery"]:checked');
+  return selected ? selected.value : 'ship';
+};
 
-  if (!projectName || quantity <= 0 || weight <= 0 || Number.isNaN(quantity) || Number.isNaN(weight)) {
+const getFormValues = () => ({
+  projectName: projectNameInput.value.trim(),
+  material: materialInput.value,
+  colorProfile: colorProfileInput.value,
+  quantity: Number(quantityInput.value),
+  weight: Number(weightInput.value),
+  finish: finishInput.value,
+  useCase: useCaseInput.value,
+  delivery: getDeliveryValue(),
+  hasUploadedFile: modelFileInput.files.length > 0,
+  rush: rushCheckbox.checked,
+  designHelp: designHelpCheckbox.checked,
+  promoCode: promoInput.value.trim().toUpperCase(),
+});
+
+const updatePromoStatus = (promoCode) => {
+  if (!promoCode) {
+    promoStatus.textContent = 'Try WELCOME10 or MAKER5.';
+    promoStatus.classList.remove('is-valid', 'is-invalid');
+    return;
+  }
+
+  if (promoCodes[promoCode]) {
+    promoStatus.textContent = `Promo applied: ${promoCode}.`;
+    promoStatus.classList.add('is-valid');
+    promoStatus.classList.remove('is-invalid');
+    return;
+  }
+
+  promoStatus.textContent = `Promo code ${promoCode} is not recognized.`;
+  promoStatus.classList.add('is-invalid');
+  promoStatus.classList.remove('is-valid');
+};
+
+const computeQuote = () => {
+  const values = getFormValues();
+
+  if (
+    !values.projectName
+    || values.quantity <= 0
+    || values.weight <= 0
+    || Number.isNaN(values.quantity)
+    || Number.isNaN(values.weight)
+  ) {
     return {
       isValid: false,
+      promoCode: values.promoCode,
       message: 'Please enter a valid project name, quantity, and weight.',
     };
   }
 
-  const baseUnit = Math.max(5, weight * materialRatePerGram[material]);
-  const unitWithColor = baseUnit * colorMultiplier[colorProfile];
-  const unitWithFinish = unitWithColor * finishMultiplier[finish];
-  const rushFee = rush ? unitWithFinish * (rushMultiplier - 1) * quantity : 0;
-  const printCost = unitWithFinish * quantity;
-  const subtotal = printCost + rushFee + (designHelp ? designHelpFee : 0);
+  const baseUnit = Math.max(5, values.weight * materialRatePerGram[values.material]);
+  const unitWithColor = baseUnit * colorMultiplier[values.colorProfile];
+  const unitWithFinish = unitWithColor * finishMultiplier[values.finish];
+  const rushFee = values.rush ? unitWithFinish * (rushMultiplier - 1) * values.quantity : 0;
+  const printCost = unitWithFinish * values.quantity;
+  const designReviewFee = values.designHelp ? designHelpFee : 0;
+  const subtotal = printCost + rushFee + designReviewFee;
   const setupHelpFee = subtotal < 25 ? 4 : 0;
-  const shipping = delivery === 'pickup' ? 0 : subtotal >= 90 ? 0 : 8;
-  const discountRate = promoCodes[promoCode] ?? 0;
+  const shipping = values.delivery === 'pickup' ? 0 : subtotal >= 90 ? 0 : 8;
+  const discountRate = promoCodes[values.promoCode] ?? 0;
   const discount = subtotal * discountRate;
   const total = subtotal + setupHelpFee + shipping - discount;
 
-  const leadTimeDays = rush
+  const leadTimeDays = values.rush
     ? 'about 1–2 business days'
-    : finish === 'premium'
+    : values.finish === 'premium'
       ? 'about 4–6 business days'
       : 'about 2–4 business days';
 
   const shippingText =
-    delivery === 'pickup' ? 'Local pickup selected' : shipping === 0 ? 'Free shipping' : `${currency.format(shipping)} shipping`;
-  const fileText = hasUploadedFile ? 'File received.' : 'No file uploaded yet.';
+    values.delivery === 'pickup' ? 'Local pickup selected' : shipping === 0 ? 'Free shipping' : `${currency.format(shipping)} shipping`;
 
   return {
     isValid: true,
-    projectName,
-    useCase,
+    ...values,
     leadTimeDays,
-    fileText,
+    fileText: values.hasUploadedFile ? 'File received.' : 'No file uploaded yet.',
     shippingText,
     printCost,
     rushFee,
-    designHelp,
+    designReviewFee,
+    subtotal,
     setupHelpFee,
     shipping,
     discount,
     total,
-    promoCode,
     hasPromo: discountRate > 0,
-    rush,
-    colorProfile,
   };
 };
 
-const saveDraft = () => {
+const setDraftStatus = (text) => {
+  draftStatus.textContent = text;
+};
+
+const persistDraft = () => {
   const draft = {
-    projectName: document.getElementById('projectName').value,
-    material: document.getElementById('material').value,
-    colorProfile: document.getElementById('colorProfile').value,
-    quantity: document.getElementById('quantity').value,
-    weight: document.getElementById('weight').value,
-    finish: document.getElementById('finish').value,
-    useCase: document.getElementById('useCase').value,
-    delivery: document.querySelector('input[name="delivery"]:checked').value,
-    email: document.getElementById('email').value,
+    projectName: projectNameInput.value,
+    material: materialInput.value,
+    colorProfile: colorProfileInput.value,
+    quantity: quantityInput.value,
+    weight: weightInput.value,
+    finish: finishInput.value,
+    useCase: useCaseInput.value,
+    delivery: getDeliveryValue(),
+    email: emailInput.value,
     promoCode: promoInput.value,
     rush: rushCheckbox.checked,
     designHelp: designHelpCheckbox.checked,
   };
 
-  localStorage.setItem(draftStorageKey, JSON.stringify(draft));
-  draftStatus.textContent = 'Draft saved.';
+  try {
+    localStorage.setItem(draftStorageKey, JSON.stringify(draft));
+    setDraftStatus('Draft saved.');
+  } catch (error) {
+    setDraftStatus('Could not save draft in this browser.');
+  }
+};
+
+const scheduleDraftSave = () => {
+  clearTimeout(draftSaveTimeout);
+  draftSaveTimeout = setTimeout(persistDraft, draftSaveDebounceMs);
 };
 
 const loadDraft = () => {
-  const rawDraft = localStorage.getItem(draftStorageKey);
+  let rawDraft;
+
+  try {
+    rawDraft = localStorage.getItem(draftStorageKey);
+  } catch (error) {
+    setDraftStatus('Draft storage is unavailable in this browser.');
+    return;
+  }
 
   if (!rawDraft) {
     return;
@@ -152,14 +219,14 @@ const loadDraft = () => {
 
   try {
     const draft = JSON.parse(rawDraft);
-    document.getElementById('projectName').value = draft.projectName ?? '';
-    document.getElementById('material').value = draft.material ?? 'PLA';
-    document.getElementById('colorProfile').value = draft.colorProfile ?? 'standard';
-    document.getElementById('quantity').value = draft.quantity ?? '1';
-    document.getElementById('weight').value = draft.weight ?? '60';
-    document.getElementById('finish').value = draft.finish ?? 'standard';
-    document.getElementById('useCase').value = draft.useCase ?? 'prototype';
-    document.getElementById('email').value = draft.email ?? '';
+    projectNameInput.value = draft.projectName ?? '';
+    materialInput.value = draft.material ?? 'PLA';
+    colorProfileInput.value = draft.colorProfile ?? 'standard';
+    quantityInput.value = draft.quantity ?? '1';
+    weightInput.value = draft.weight ?? '60';
+    finishInput.value = draft.finish ?? 'standard';
+    useCaseInput.value = draft.useCase ?? 'prototype';
+    emailInput.value = draft.email ?? '';
     promoInput.value = draft.promoCode ?? '';
     rushCheckbox.checked = Boolean(draft.rush);
     designHelpCheckbox.checked = Boolean(draft.designHelp);
@@ -171,29 +238,58 @@ const loadDraft = () => {
       deliveryInput.checked = true;
     }
 
-    draftStatus.textContent = 'Loaded your saved draft.';
-  } catch {
-    draftStatus.textContent = 'Could not load saved draft. Starting fresh.';
+    setDraftStatus('Loaded your saved draft.');
+  } catch (error) {
+    setDraftStatus('Could not load saved draft. Starting fresh.');
   }
 };
 
 const clearDraft = () => {
-  localStorage.removeItem(draftStorageKey);
+  try {
+    localStorage.removeItem(draftStorageKey);
+  } catch (error) {
+    // ignore storage removal failures
+  }
+
   form.reset();
-  document.querySelector('input[name="delivery"][value="ship"]').checked = true;
-  draftStatus.textContent = 'Saved draft cleared.';
+  const shipOption = document.querySelector('input[name="delivery"][value="ship"]');
+
+  if (shipOption) {
+    shipOption.checked = true;
+  }
+
+  setDraftStatus('Saved draft cleared.');
   nextSteps.hidden = true;
   result.textContent = "Fill in your details and we'll show a quick estimate.";
   renderLiveEstimate();
 };
 
+const renderLiveBreakdown = (quote) => {
+  if (!quote.isValid) {
+    liveBreakdown.innerHTML = '<li>Print cost: —</li><li>Setup fee: —</li><li>Shipping: —</li>';
+    return;
+  }
+
+  const discountText = quote.hasPromo ? `-${currency.format(quote.discount)}` : 'none';
+
+  liveBreakdown.innerHTML = `<li>Print cost: ${currency.format(quote.printCost)}</li>
+    <li>Rush fee: ${currency.format(quote.rushFee)}</li>
+    <li>Design review: ${currency.format(quote.designReviewFee)}</li>
+    <li>Setup fee: ${currency.format(quote.setupHelpFee)}</li>
+    <li>Shipping: ${currency.format(quote.shipping)}</li>
+    <li>Promo discount: ${discountText}</li>`;
+};
+
 const renderLiveEstimate = () => {
   const quote = computeQuote();
+
+  updatePromoStatus(quote.promoCode);
 
   if (!quote.isValid) {
     estimatePreview.textContent = '—';
     estimateTimeline.textContent = 'Add valid project details to preview your estimate.';
     estimateMeta.textContent = 'Includes print cost, setup fee, and delivery.';
+    renderLiveBreakdown(quote);
     return;
   }
 
@@ -209,18 +305,17 @@ const renderLiveEstimate = () => {
   } else {
     estimateMeta.textContent = 'Standard production timeline selected.';
   }
+
+  renderLiveBreakdown(quote);
 };
 
-form.addEventListener('input', () => {
-  saveDraft();
+const handleFormUpdate = () => {
+  scheduleDraftSave();
   renderLiveEstimate();
-});
+};
 
-form.addEventListener('change', () => {
-  saveDraft();
-  renderLiveEstimate();
-});
-
+form.addEventListener('input', handleFormUpdate);
+form.addEventListener('change', handleFormUpdate);
 clearDraftButton.addEventListener('click', clearDraft);
 
 form.addEventListener('submit', (event) => {
@@ -239,7 +334,7 @@ form.addEventListener('submit', (event) => {
     ? `<li>Promo (${quote.promoCode}): -${currency.format(quote.discount)}</li>`
     : '<li>Promo: none</li>';
   const rushLine = quote.rush ? `<li>Rush fee: ${currency.format(quote.rushFee)}</li>` : '';
-  const designReviewLine = quote.designHelp ? `<li>Design review: ${currency.format(designHelpFee)}</li>` : '<li>Design review: none</li>';
+  const designReviewLine = quote.designHelp ? `<li>Design review: ${currency.format(quote.designReviewFee)}</li>` : '<li>Design review: none</li>';
 
   result.innerHTML = `${safeProjectName}: estimated <strong>${currency.format(quote.total)}</strong> with a lead time of ${quote.leadTimeDays}. ${quote.fileText} ${useCaseNotes[quote.useCase]}
     <ul class="quote-breakdown">
