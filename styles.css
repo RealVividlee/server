@@ -228,7 +228,8 @@ button:hover {
   margin-bottom: 0.35rem;
 }
 
-.mission-lab textarea {
+.mission-lab textarea,
+.mission-lab select {
   width: 100%;
   margin-top: 0.35rem;
   border-radius: 10px;
@@ -237,6 +238,9 @@ button:hover {
   color: var(--ink);
   padding: 0.65rem;
   font: inherit;
+}
+
+.mission-lab textarea {
   resize: vertical;
 }
 
@@ -642,7 +646,8 @@ button:hover {
   margin-bottom: 0.35rem;
 }
 
-.mission-lab textarea {
+.mission-lab textarea,
+.mission-lab select {
   width: 100%;
   margin-top: 0.35rem;
   border-radius: 10px;
@@ -651,6 +656,9 @@ button:hover {
   color: var(--ink);
   padding: 0.65rem;
   font: inherit;
+}
+
+.mission-lab textarea {
   resize: vertical;
 }
 
