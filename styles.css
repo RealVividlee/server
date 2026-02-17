@@ -376,14 +376,24 @@ button:hover {
   font: inherit;
 }
 
-.delivery-fieldset {
+.delivery-fieldset,
+.customization-fieldset {
   border: 1px solid #dcc3a3;
   border-radius: 9px;
   padding: 0.65rem 0.75rem;
   margin: 0;
 }
 
-.delivery-fieldset legend {
+.customization-fieldset {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  background: #fffaf3;
+}
+
+.delivery-fieldset legend,
+.customization-fieldset legend {
   padding: 0 0.35rem;
   color: var(--ink-light);
   font-weight: 700;
@@ -645,6 +655,10 @@ button:hover {
   .page-links-grid {
     grid-template-columns: 1fr;
   }
+
+  .customization-fieldset {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 700px) {
@@ -656,7 +670,8 @@ button:hover {
   .quote-form,
   .form-actions,
   .beginner-grid,
-  .option-cards {
+  .option-cards,
+  .customization-fieldset {
     grid-template-columns: 1fr;
   }
 }

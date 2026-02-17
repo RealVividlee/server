@@ -2,6 +2,7 @@ const materialRatePerGram = {
   PLA: 0.09,
   PETG: 0.13,
   ABS: 0.15,
+  TPU: 0.18,
   Resin: 0.2,
 };
 
@@ -12,8 +13,29 @@ const finishMultiplier = {
 
 const colorMultiplier = {
   standard: 1,
+  matte: 1.06,
   silk: 1.12,
+  translucent: 1.16,
   custom: 1.2,
+};
+
+const layerDetailMultiplier = {
+  draft: 0.92,
+  balanced: 1,
+  fine: 1.16,
+};
+
+const infillMultiplier = {
+  light: 0.94,
+  standard: 1,
+  strong: 1.12,
+  max: 1.24,
+};
+
+const supportLevelMultiplier = {
+  minimal: 0.96,
+  standard: 1,
+  complex: 1.14,
 };
 
 const promoCodes = {
@@ -54,6 +76,9 @@ const colorProfileInput = document.getElementById('colorProfile');
 const quantityInput = document.getElementById('quantity');
 const weightInput = document.getElementById('weight');
 const finishInput = document.getElementById('finish');
+const layerDetailInput = document.getElementById('layerDetail');
+const infillDensityInput = document.getElementById('infillDensity');
+const supportLevelInput = document.getElementById('supportLevel');
 const useCaseInput = document.getElementById('useCase');
 const emailInput = document.getElementById('email');
 const modelFileInput = document.getElementById('modelFile');
@@ -82,6 +107,9 @@ const getFormValues = () => ({
   quantity: Number(quantityInput.value),
   weight: Number(weightInput.value),
   finish: finishInput.value,
+  layerDetail: layerDetailInput.value,
+  infillDensity: infillDensityInput.value,
+  supportLevel: supportLevelInput.value,
   useCase: useCaseInput.value,
   delivery: getDeliveryValue(),
   hasUploadedFile: modelFileInput.files.length > 0,
@@ -123,8 +151,11 @@ const calculateQuote = (overrides = {}) => {
   const baseUnit = Math.max(5, values.weight * materialRatePerGram[values.material]);
   const unitWithColor = baseUnit * colorMultiplier[values.colorProfile];
   const unitWithFinish = unitWithColor * finishMultiplier[values.finish];
-  const rushFee = values.rush ? unitWithFinish * (rushMultiplier - 1) * values.quantity : 0;
-  const printCost = unitWithFinish * values.quantity;
+  const unitWithDetail = unitWithFinish * layerDetailMultiplier[values.layerDetail];
+  const unitWithInfill = unitWithDetail * infillMultiplier[values.infillDensity];
+  const customizedUnit = unitWithInfill * supportLevelMultiplier[values.supportLevel];
+  const rushFee = values.rush ? customizedUnit * (rushMultiplier - 1) * values.quantity : 0;
+  const printCost = customizedUnit * values.quantity;
   const designReviewFee = values.designHelp ? designHelpFee : 0;
   const subtotal = printCost + rushFee + designReviewFee;
   const setupHelpFee = subtotal < 25 ? 4 : 0;
@@ -167,6 +198,9 @@ const persistDraft = () => {
     quantity: quantityInput.value,
     weight: weightInput.value,
     finish: finishInput.value,
+    layerDetail: layerDetailInput.value,
+    infillDensity: infillDensityInput.value,
+    supportLevel: supportLevelInput.value,
     useCase: useCaseInput.value,
     delivery: getDeliveryValue(),
     email: emailInput.value,
@@ -211,6 +245,9 @@ const loadDraft = () => {
     quantityInput.value = draft.quantity ?? '1';
     weightInput.value = draft.weight ?? '60';
     finishInput.value = draft.finish ?? 'standard';
+    layerDetailInput.value = draft.layerDetail ?? 'balanced';
+    infillDensityInput.value = draft.infillDensity ?? 'standard';
+    supportLevelInput.value = draft.supportLevel ?? 'standard';
     useCaseInput.value = draft.useCase ?? 'prototype';
     emailInput.value = draft.email ?? '';
     promoInput.value = draft.promoCode ?? '';
@@ -284,6 +321,9 @@ const renderLiveBreakdown = (quote) => {
 
   const discountText = quote.hasPromo ? `-${currency.format(quote.discount)}` : 'none';
   liveBreakdown.innerHTML = `<li>Print cost: ${currency.format(quote.printCost)}</li>
+    <li>Detail profile: ${quote.layerDetail}</li>
+    <li>Infill profile: ${quote.infillDensity}</li>
+    <li>Support profile: ${quote.supportLevel}</li>
     <li>Rush fee: ${currency.format(quote.rushFee)}</li>
     <li>Design review: ${currency.format(quote.designReviewFee)}</li>
     <li>Setup fee: ${currency.format(quote.setupHelpFee)}</li>
@@ -344,6 +384,16 @@ const heuristicMissionPlan = (text) => {
     plan.colorProfile = 'silk';
     plan.useCase = 'display';
     plan.reasons.push('Upgraded finish/color for presentation quality.');
+  }
+
+  if (text.includes('matte') || text.includes('non-gloss')) {
+    plan.colorProfile = 'matte';
+    plan.reasons.push('Applied matte color profile for low-glare appearance.');
+  }
+
+  if (text.includes('light') || text.includes('lantern') || text.includes('glow') || text.includes('see-through')) {
+    plan.colorProfile = 'translucent';
+    plan.reasons.push('Applied translucent profile for light-passing parts.');
   }
 
   if (text.includes('strong') || text.includes('load') || text.includes('weight') || text.includes('replacement')) {
@@ -469,7 +519,18 @@ const applyTranslatedMission = () => {
   designHelpCheckbox.checked = translatedMissionPlan.designHelp;
   useCaseInput.value = translatedMissionPlan.useCase;
 
-  missionResult.textContent = 'Translated plan applied to your quote form.';
+  if (translatedMissionPlan.useCase === 'replacement') {
+    infillDensityInput.value = 'strong';
+    supportLevelInput.value = 'complex';
+  } else if (translatedMissionPlan.useCase === 'display' || translatedMissionPlan.useCase === 'gift') {
+    layerDetailInput.value = 'fine';
+  } else {
+    layerDetailInput.value = 'balanced';
+    infillDensityInput.value = 'standard';
+    supportLevelInput.value = 'standard';
+  }
+
+  missionResult.textContent = 'Translated plan applied to your quote form and customization settings.';
   handleFormUpdate();
 };
 
@@ -492,6 +553,8 @@ const renderLiveEstimate = () => {
     estimateMeta.textContent = 'Rush production enabled (35% faster-turnaround fee applied).';
   } else if (quote.designHelp) {
     estimateMeta.textContent = 'Design review is enabled (+$12) for printability checks.';
+  } else if (quote.layerDetail !== 'balanced' || quote.infillDensity !== 'standard' || quote.supportLevel !== 'standard') {
+    estimateMeta.textContent = 'Advanced print customizations are active for this estimate.';
   } else if (quote.colorProfile !== 'standard') {
     estimateMeta.textContent = 'Special color profile selected (material finishing surcharge applied).';
   } else {

@@ -60,10 +60,11 @@
             <label>
               Material
               <select id="material" name="material" required>
-                <option value="PLA">PLA</option>
-                <option value="PETG">PETG</option>
-                <option value="ABS">ABS</option>
-                <option value="Resin">Resin</option>
+                <option value="PLA">PLA (easy + affordable)</option>
+                <option value="PETG">PETG (durable / outdoor)</option>
+                <option value="ABS">ABS (high-temp enclosure needed)</option>
+                <option value="TPU">TPU (flexible)</option>
+                <option value="Resin">Resin (high detail)</option>
               </select>
             </label>
 
@@ -71,7 +72,9 @@
               Color profile
               <select id="colorProfile" name="colorProfile" required>
                 <option value="standard">Standard color</option>
-                <option value="silk">Silk / specialty finish</option>
+                <option value="matte">Matte</option>
+                <option value="silk">Silk / glossy specialty</option>
+                <option value="translucent">Translucent</option>
                 <option value="custom">Custom color match</option>
               </select>
             </label>
@@ -95,6 +98,35 @@
               </select>
               <small class="field-help">Standard keeps visible print lines. Premium includes extra cleanup for smoother parts.</small>
             </label>
+
+            <fieldset class="customization-fieldset">
+              <legend>Print customization (fine tune after mission translation)</legend>
+              <label>
+                Surface detail
+                <select id="layerDetail" name="layerDetail">
+                  <option value="draft">Draft (fastest)</option>
+                  <option value="balanced" selected>Balanced</option>
+                  <option value="fine">Fine detail</option>
+                </select>
+              </label>
+              <label>
+                Infill density
+                <select id="infillDensity" name="infillDensity">
+                  <option value="light">Light 15%</option>
+                  <option value="standard" selected>Standard 25%</option>
+                  <option value="strong">Strong 40%</option>
+                  <option value="max">Max strength 60%</option>
+                </select>
+              </label>
+              <label>
+                Support complexity
+                <select id="supportLevel" name="supportLevel">
+                  <option value="minimal">Minimal supports</option>
+                  <option value="standard" selected>Standard supports</option>
+                  <option value="complex">Complex supports</option>
+                </select>
+              </label>
+            </fieldset>
 
             <label>
               What is this print for?
