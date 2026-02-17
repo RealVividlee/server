@@ -756,12 +756,86 @@ button:hover {
   }
 }
 
+
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.material-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.material-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.3rem;
+}
+
+.material-card ul {
+  margin: 0.6rem 0 0;
+  padding-left: 1rem;
+  color: var(--ink-light);
+}
+
+.material-matrix {
+  margin-top: 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.material-matrix table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.material-matrix th,
+.material-matrix td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.6rem 0.5rem;
+  text-align: left;
+}
+
+.material-matrix th {
+  color: var(--ink-light);
+  font-size: 0.92rem;
+}
+
+.material-note {
+  margin: 0.6rem 0 0;
+  color: var(--ink-light);
+  font-size: 0.92rem;
+}
+
+.secondary-link {
+  text-align: center;
+  background: #2a3345;
+  color: var(--ink);
+  border: 1px solid #42506e;
+}
+
+.secondary-link:hover {
+  background: #35435f;
+}
+
 @media (max-width: 930px) {
   .hero-grid,
   .about-grid,
   .faq-grid,
   .samples-grid,
-  .page-links-grid {
+  .page-links-grid,
+  .materials-grid {
     grid-template-columns: 1fr;
   }
 
