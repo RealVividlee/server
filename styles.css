@@ -283,6 +283,37 @@ button:hover {
   margin: 0.55rem 0 0;
   color: var(--ink-light);
 }
+
+.form-progress {
+  background: #fff8ef;
+  border: 1px solid #e5c7a0;
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.progress-label {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink-light);
+}
+
+.progress-track {
+  margin-top: 0.55rem;
+  height: 10px;
+  border-radius: 999px;
+  background: #f0ddc4;
+  overflow: hidden;
+}
+
+.progress-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 160ms ease;
+}
 .quote-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -359,6 +390,11 @@ button:hover {
   font-weight: 800;
   padding: 0.85rem 1rem;
   cursor: pointer;
+}
+
+.quote-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .quote-form .secondary-btn {

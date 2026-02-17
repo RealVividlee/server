@@ -26,6 +26,33 @@ const designHelpFee = 12;
 const draftStorageKey = 'maple-layer-quote-draft-v1';
 const draftSaveDebounceMs = 250;
 
+const presets = {
+  replacement: {
+    projectName: 'Replacement hinge clip',
+    material: 'PETG',
+    quantity: '2',
+    weight: '45',
+    finish: 'standard',
+    useCase: 'replacement',
+  },
+  prototype: {
+    projectName: 'Prototype housing test set',
+    material: 'PLA',
+    quantity: '8',
+    weight: '70',
+    finish: 'standard',
+    useCase: 'prototype',
+  },
+  display: {
+    projectName: 'Display figurine',
+    material: 'Resin',
+    quantity: '1',
+    weight: '55',
+    finish: 'premium',
+    useCase: 'display',
+  },
+};
+
 const form = document.getElementById('quote-form');
 const nextSteps = document.getElementById('quote-next-steps');
 const estimatePreview = document.getElementById('live-estimate-value');
@@ -39,6 +66,10 @@ const rushCheckbox = document.getElementById('rush');
 const designHelpCheckbox = document.getElementById('designHelp');
 const promoInput = document.getElementById('promoCode');
 const year = document.getElementById('year');
+const progressLabel = document.getElementById('progress-label');
+const progressFill = document.getElementById('progress-fill');
+const confirmEstimateBtn = document.getElementById('confirmEstimateBtn');
+const progressTrack = document.querySelector('.progress-track');
 
 const projectNameInput = document.getElementById('projectName');
 const materialInput = document.getElementById('material');
@@ -82,6 +113,33 @@ const getFormValues = () => ({
   designHelp: designHelpCheckbox.checked,
   promoCode: promoInput.value.trim().toUpperCase(),
 });
+
+const updateFormProgress = () => {
+  const values = getFormValues();
+  const checks = [
+    values.projectName.length > 1,
+    values.quantity > 0 && !Number.isNaN(values.quantity),
+    values.weight > 0 && !Number.isNaN(values.weight),
+    values.useCase.length > 0,
+    emailInput.value.trim().includes('@'),
+  ];
+
+  const completeCount = checks.filter(Boolean).length;
+  const percent = Math.round((completeCount / checks.length) * 100);
+
+  progressFill.style.width = `${percent}%`;
+  progressTrack.setAttribute('aria-valuenow', String(percent));
+
+  if (percent < 40) {
+    progressLabel.textContent = 'Start with project basics (name, quantity, and weight).';
+  } else if (percent < 80) {
+    progressLabel.textContent = 'Great. Add contact details so we can confirm print settings.';
+  } else {
+    progressLabel.textContent = 'Looks good — you can confirm your estimate now.';
+  }
+
+  confirmEstimateBtn.disabled = percent < 80;
+};
 
 const updatePromoStatus = (promoCode) => {
   if (!promoCode) {
@@ -275,33 +333,6 @@ const applyBeginnerMode = (enabled) => {
 };
 
 const applyPreset = (presetName) => {
-  const presets = {
-    replacement: {
-      projectName: 'Replacement hinge clip',
-      material: 'PETG',
-      quantity: '2',
-      weight: '45',
-      finish: 'standard',
-      useCase: 'replacement',
-    },
-    prototype: {
-      projectName: 'Prototype housing test set',
-      material: 'PLA',
-      quantity: '8',
-      weight: '70',
-      finish: 'standard',
-      useCase: 'prototype',
-    },
-    display: {
-      projectName: 'Display figurine',
-      material: 'Resin',
-      quantity: '1',
-      weight: '55',
-      finish: 'premium',
-      useCase: 'display',
-    },
-  };
-
   const preset = presets[presetName];
 
   if (!preset) {
@@ -345,6 +376,7 @@ const renderLiveEstimate = () => {
     estimateTimeline.textContent = 'Add valid project details to preview your estimate.';
     estimateMeta.textContent = 'Includes print cost, setup fee, and delivery.';
     renderLiveBreakdown(quote);
+    updateFormProgress();
     return;
   }
 
@@ -362,6 +394,7 @@ const renderLiveEstimate = () => {
   }
 
   renderLiveBreakdown(quote);
+  updateFormProgress();
 };
 
 const handleFormUpdate = () => {
@@ -391,6 +424,7 @@ form.addEventListener('submit', (event) => {
     return;
   }
 
+  persistDraft();
   estimateMeta.textContent = `Estimate confirmed for ${quote.projectName}. ${quote.fileText}`;
   nextSteps.hidden = false;
   nextSteps.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
