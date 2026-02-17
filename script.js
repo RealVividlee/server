@@ -60,6 +60,8 @@ const modelFileInput = document.getElementById('modelFile');
 
 let draftSaveTimeout;
 let translatedMissionPlan;
+let aiEndpointStatus = 'unknown';
+
 
 year.textContent = new Date().getFullYear();
 
@@ -376,7 +378,9 @@ const fetchAiMissionPlan = async (text) => {
     });
 
     if (!response.ok) {
-      throw new Error('AI endpoint unavailable');
+      const error = new Error('AI endpoint unavailable');
+      error.status = response.status;
+      throw error;
     }
 
     const data = await response.json();
@@ -414,12 +418,18 @@ const translateMission = async () => {
 
   let plan;
   let usedSource = 'rules';
+  const shouldAttemptAi = missionMode.value === 'ai' || (missionMode.value === 'auto' && aiEndpointStatus !== 'unavailable');
 
-  if (missionMode.value === 'ai' || missionMode.value === 'auto') {
+  if (shouldAttemptAi) {
     try {
       plan = await fetchAiMissionPlan(text);
       usedSource = 'ai';
-    } catch {
+      aiEndpointStatus = 'available';
+    } catch (error) {
+      if (error?.status === 404 || error?.status === 405 || error?.status === 501) {
+        aiEndpointStatus = 'unavailable';
+      }
+
       if (missionMode.value === 'ai') {
         missionResult.textContent = 'AI mode selected, but AI endpoint is not available. Switch to auto or rules mode.';
         missionSource.textContent = 'Current mode: AI only (endpoint unavailable)';
@@ -438,7 +448,9 @@ const translateMission = async () => {
   missionSource.textContent = usedSource === 'ai'
     ? 'Source: AI recommendation'
     : missionMode.value === 'auto'
-      ? 'Source: Rules fallback (AI unavailable)'
+      ? aiEndpointStatus === 'unavailable'
+        ? 'Source: Rules engine (AI endpoint unavailable)'
+        : 'Source: Rules fallback (AI unavailable)'
       : 'Source: Rules engine';
 
   missionResult.innerHTML = `<strong>Recommended plan:</strong> ${plan.material}, ${plan.finish} finish, ${plan.colorProfile} color profile.${plan.rush ? ' Rush enabled.' : ''}${plan.designHelp ? ' Design review enabled.' : ''}<br>${plan.reasons.join(' ') || 'Using balanced defaults based on your note.'}`;
