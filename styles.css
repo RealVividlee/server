@@ -352,29 +352,6 @@ button:hover {
 .live-breakdown li + li {
   margin-top: 0.2rem;
 }
-.quote-result {
-  margin-top: 1rem;
-  background: #3d2d1f;
-  color: #fff8ef;
-  padding: 0.95rem 1rem;
-  border-radius: 10px;
-  font-weight: 700;
-}
-
-.quote-breakdown {
-  margin: 0.45rem 0 0;
-  padding: 0.8rem 1rem;
-  border-radius: 9px;
-  border: 1px dashed #c9a97f;
-  background: rgba(255, 248, 238, 0.4);
-  color: #ffeed7;
-  font-weight: 600;
-}
-
-.quote-breakdown li + li {
-  margin-top: 0.3rem;
-}
-
 .quote-next-steps {
   margin-top: 1rem;
   box-shadow: none;

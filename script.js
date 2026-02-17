@@ -16,14 +16,6 @@ const colorMultiplier = {
   custom: 1.2,
 };
 
-const useCaseNotes = {
-  prototype: 'Prototype jobs are usually quick for us.',
-  replacement: 'Replacement parts get an extra fit check note before print.',
-  display: 'Display models may benefit from premium cleanup for smoother surfaces.',
-  gift: 'Gift projects can include simple cleanup touches upon request.',
-  other: 'We can review custom project needs by email.',
-};
-
 const promoCodes = {
   WELCOME10: 0.1,
   MAKER5: 0.05,
@@ -35,7 +27,6 @@ const draftStorageKey = 'maple-layer-quote-draft-v1';
 const draftSaveDebounceMs = 250;
 
 const form = document.getElementById('quote-form');
-const result = document.getElementById('quote-result');
 const nextSteps = document.getElementById('quote-next-steps');
 const estimatePreview = document.getElementById('live-estimate-value');
 const estimateTimeline = document.getElementById('live-estimate-time');
@@ -67,12 +58,6 @@ const currency = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
 });
-
-const escapeHtml = (value) =>
-  value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
 
 const getDeliveryValue = () => {
   const selected = document.querySelector('input[name="delivery"]:checked');
@@ -260,7 +245,6 @@ const clearDraft = () => {
 
   setDraftStatus('Saved draft cleared.');
   nextSteps.hidden = true;
-  result.textContent = "Fill in your details and we'll show a quick estimate.";
   renderLiveEstimate();
 };
 
@@ -324,30 +308,14 @@ form.addEventListener('submit', (event) => {
   const quote = computeQuote();
 
   if (!quote.isValid) {
-    result.textContent = quote.message;
+    estimateMeta.textContent = quote.message;
     nextSteps.hidden = true;
     return;
   }
 
-  const safeProjectName = escapeHtml(quote.projectName);
-  const discountLine = quote.hasPromo
-    ? `<li>Promo (${quote.promoCode}): -${currency.format(quote.discount)}</li>`
-    : '<li>Promo: none</li>';
-  const rushLine = quote.rush ? `<li>Rush fee: ${currency.format(quote.rushFee)}</li>` : '';
-  const designReviewLine = quote.designHelp ? `<li>Design review: ${currency.format(quote.designReviewFee)}</li>` : '<li>Design review: none</li>';
-
-  result.innerHTML = `${safeProjectName}: estimated <strong>${currency.format(quote.total)}</strong> with a lead time of ${quote.leadTimeDays}. ${quote.fileText} ${useCaseNotes[quote.useCase]}
-    <ul class="quote-breakdown">
-      <li>Print cost: ${currency.format(quote.printCost)}</li>
-      ${rushLine}
-      ${designReviewLine}
-      <li>Small-order setup: ${currency.format(quote.setupHelpFee)}</li>
-      <li>${quote.shippingText}</li>
-      ${discountLine}
-      <li><strong>Total: ${currency.format(quote.total)}</strong></li>
-    </ul>`;
-
+  estimateMeta.textContent = `Estimate confirmed for ${quote.projectName}. ${quote.fileText}`;
   nextSteps.hidden = false;
+  nextSteps.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 
 loadDraft();
