@@ -3,7 +3,6 @@ const materialRatePerGram = {
   PETG: 0.13,
   ABS: 0.15,
   TPU: 0.18,
-  Resin: 0.2,
 };
 
 const finishMultiplier = {

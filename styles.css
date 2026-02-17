@@ -772,6 +772,30 @@ button:hover {
   box-shadow: var(--shadow);
 }
 
+
+.material-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #36435f;
+  margin-bottom: 0.65rem;
+}
+
+.material-character {
+  display: inline-block;
+  margin: 0 0 0.35rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid #42506e;
+  background: #202a3b;
+  color: #b8c9ff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .material-card h3 {
   margin-top: 0;
   margin-bottom: 0.3rem;
