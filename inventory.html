@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FAQ | Maple & Layer</title>
+    <title>Inventory | Maple & Layer</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -24,27 +24,19 @@
     </header>
 
     <main>
-      <section class="section section-alt" id="faq">
+      <section class="section">
         <div class="container">
-          <h2>Quick FAQ</h2>
-          <div class="faq-grid">
-            <details>
-              <summary>What file types do you accept?</summary>
-              <p>STL, OBJ, and 3MF are supported right now.</p>
-            </details>
-            <details>
-              <summary>Can you help me choose material?</summary>
-              <p>Yes. Tell us how the part will be used and we will recommend the best option.</p>
-            </details>
-            <details>
-              <summary>Do you do very small orders?</summary>
-              <p>Absolutely — one-off prints are a big part of what we do.</p>
-            </details>
-            <details>
-              <summary>Can I pick up locally?</summary>
-              <p>Yes, choose local pickup in the quote form and shipping is removed.</p>
-            </details>
-          </div>
+          <h2>Live Inventory</h2>
+          <p class="quote-intro">Current shop availability for filament, machines, build plates, nozzles, and AMS setup.</p>
+          <p class="inventory-updated" id="inventoryUpdatedAt">Last updated: —</p>
+          <p class="inventory-edit-note">To edit this page yourself, update <code>inventory-data.js</code> in your project folder. No code changes needed in HTML.</p>
+
+          <div id="inventorySections"></div>
+
+          <section class="inventory-block">
+            <h3>AMS functionality</h3>
+            <div id="amsSummary"></div>
+          </section>
         </div>
       </section>
     </main>
@@ -54,5 +46,8 @@
         <p>© 2026 Maple & Layer · Small-batch 3D printing with real human support.</p>
       </div>
     </footer>
+
+    <script src="inventory-data.js"></script>
+    <script src="inventory.js"></script>
   </body>
 </html>

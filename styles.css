@@ -757,6 +757,69 @@ button:hover {
 }
 
 
+
+.inventory-updated {
+  color: var(--ink-light);
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+}
+
+.inventory-edit-note {
+  margin: 0 0 1rem;
+  color: var(--ink-light);
+}
+
+.inventory-edit-note code {
+  background: #202a3b;
+  border: 1px solid #42506e;
+  border-radius: 6px;
+  padding: 0.08rem 0.4rem;
+  color: #d6e0ff;
+}
+
+.inventory-block {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.inventory-block h3 {
+  margin-top: 0;
+}
+
+.inventory-status {
+  display: inline-flex;
+  padding: 0.14rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.inventory-status-in_stock {
+  background: rgba(56, 194, 115, 0.2);
+  color: #8ef0b5;
+  border: 1px solid rgba(99, 214, 137, 0.45);
+}
+
+.inventory-status-low {
+  background: rgba(226, 173, 67, 0.2);
+  color: #ffd98a;
+  border: 1px solid rgba(226, 173, 67, 0.45);
+}
+
+.inventory-status-out {
+  background: rgba(230, 94, 94, 0.22);
+  color: #ff9f9f;
+  border: 1px solid rgba(255, 123, 123, 0.5);
+}
+
+#amsSummary ul {
+  margin: 0.45rem 0 0.8rem;
+  color: var(--ink-light);
+}
+
 .materials-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
