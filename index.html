@@ -138,38 +138,6 @@
           <p class="quote-intro">No big minimums. Tell us what you need and we'll estimate it instantly.</p>
 
 
-          <div class="quote-tools">
-            <p class="tool-title">Start fast with a template:</p>
-            <div class="preset-buttons" role="group" aria-label="Preset project types">
-              <button type="button" class="preset-btn" data-preset="replacement">Replacement part</button>
-              <button type="button" class="preset-btn" data-preset="prototype">Prototype batch</button>
-              <button type="button" class="preset-btn" data-preset="display">Display model</button>
-            </div>
-            <label class="checkbox-row beginner-toggle">
-              <input type="checkbox" id="beginnerMode" />
-              I'm new to 3D printing — simplify this form
-            </label>
-            <p class="beginner-hint" id="beginner-hint" hidden>
-              Beginner mode is on. We hid advanced pricing options and set safe defaults.
-            </p>
-          </div>
-
-          <details class="term-guide">
-            <summary>What do these terms mean?</summary>
-            <ul>
-              <li><strong>Material:</strong> the type of plastic/resin used for the part.</li>
-              <li><strong>Finish level:</strong> how much post-print cleanup we do for smoother surfaces.</li>
-              <li><strong>Weight (grams):</strong> how much filament/resin the part roughly uses.</li>
-            </ul>
-          </details>
-
-          <div class="form-progress" aria-live="polite">
-            <p class="progress-label" id="progress-label">Complete your project details to unlock estimate confirmation.</p>
-            <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-              <span class="progress-fill" id="progress-fill"></span>
-            </div>
-          </div>
-
           <form class="quote-form" id="quote-form">
             <label>
               Project name
@@ -186,7 +154,7 @@
               </select>
             </label>
 
-            <label class="advanced-field">
+            <label>
               Color profile
               <select id="colorProfile" name="colorProfile" required>
                 <option value="standard">Standard color</option>
@@ -206,7 +174,7 @@
               <small class="field-help">Not sure? Keep the default and we will fine-tune after file review.</small>
             </label>
 
-            <label class="advanced-field">
+            <label>
               Finish level
               <select id="finish" name="finish" required>
                 <option value="standard">Standard</option>
@@ -249,25 +217,25 @@
               <input type="email" id="email" name="email" placeholder="you@example.com" required />
             </label>
 
-            <label class="advanced-field">
+            <label>
               Promo code (optional)
               <input type="text" id="promoCode" name="promoCode" placeholder="WELCOME10" maxlength="20" />
             </label>
 
-            <p class="promo-status advanced-field" id="promo-status" aria-live="polite">Try WELCOME10 or MAKER5.</p>
+            <p class="promo-status" id="promo-status" aria-live="polite">Try WELCOME10 or MAKER5.</p>
 
-            <label class="checkbox-row advanced-field">
+            <label class="checkbox-row">
               <input type="checkbox" id="rush" name="rush" />
               Rush production (1–2 business days, +35%)
             </label>
 
-            <label class="checkbox-row advanced-field">
+            <label class="checkbox-row">
               <input type="checkbox" id="designHelp" name="designHelp" />
               Need printability/design review (+$12)
             </label>
 
             <div class="form-actions">
-              <button type="submit" id="confirmEstimateBtn">Confirm estimate</button>
+              <button type="submit">Confirm estimate</button>
               <button type="button" id="clearDraft" class="secondary-btn">Clear saved draft</button>
             </div>
           </form>
@@ -285,6 +253,20 @@
               <li>Shipping: —</li>
             </ul>
           </aside>
+
+
+          <section class="option-lab" aria-live="polite">
+            <div class="option-lab-header">
+              <h3>Compare options instantly</h3>
+              <button type="button" id="generateOptions" class="secondary-btn">Generate 3 smart options</button>
+            </div>
+            <p class="option-lab-copy">See budget, balanced, and premium paths before you commit.</p>
+            <div class="option-cards" id="option-cards">
+              <article class="option-card"><h4>Budget</h4><p>Add project details to generate options.</p></article>
+              <article class="option-card"><h4>Balanced</h4><p>We will show speed/cost tradeoffs here.</p></article>
+              <article class="option-card"><h4>Premium</h4><p>Best finish and support recommendations appear here.</p></article>
+            </div>
+          </section>
 
           <div class="quote-next-steps" id="quote-next-steps" hidden>
             <h3>What happens next</h3>

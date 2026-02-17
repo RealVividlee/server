@@ -26,39 +26,14 @@ const designHelpFee = 12;
 const draftStorageKey = 'maple-layer-quote-draft-v1';
 const draftSaveDebounceMs = 250;
 
-const presets = {
-  replacement: {
-    projectName: 'Replacement hinge clip',
-    material: 'PETG',
-    quantity: '2',
-    weight: '45',
-    finish: 'standard',
-    useCase: 'replacement',
-  },
-  prototype: {
-    projectName: 'Prototype housing test set',
-    material: 'PLA',
-    quantity: '8',
-    weight: '70',
-    finish: 'standard',
-    useCase: 'prototype',
-  },
-  display: {
-    projectName: 'Display figurine',
-    material: 'Resin',
-    quantity: '1',
-    weight: '55',
-    finish: 'premium',
-    useCase: 'display',
-  },
-};
-
 const form = document.getElementById('quote-form');
 const nextSteps = document.getElementById('quote-next-steps');
 const estimatePreview = document.getElementById('live-estimate-value');
 const estimateTimeline = document.getElementById('live-estimate-time');
 const estimateMeta = document.getElementById('live-estimate-meta');
 const liveBreakdown = document.getElementById('live-breakdown');
+const optionCards = document.getElementById('option-cards');
+const generateOptionsButton = document.getElementById('generateOptions');
 const draftStatus = document.getElementById('draft-status');
 const promoStatus = document.getElementById('promo-status');
 const clearDraftButton = document.getElementById('clearDraft');
@@ -66,10 +41,6 @@ const rushCheckbox = document.getElementById('rush');
 const designHelpCheckbox = document.getElementById('designHelp');
 const promoInput = document.getElementById('promoCode');
 const year = document.getElementById('year');
-const progressLabel = document.getElementById('progress-label');
-const progressFill = document.getElementById('progress-fill');
-const confirmEstimateBtn = document.getElementById('confirmEstimateBtn');
-const progressTrack = document.querySelector('.progress-track');
 
 const projectNameInput = document.getElementById('projectName');
 const materialInput = document.getElementById('material');
@@ -80,10 +51,6 @@ const finishInput = document.getElementById('finish');
 const useCaseInput = document.getElementById('useCase');
 const emailInput = document.getElementById('email');
 const modelFileInput = document.getElementById('modelFile');
-const beginnerModeCheckbox = document.getElementById('beginnerMode');
-const beginnerHint = document.getElementById('beginner-hint');
-const presetButtons = document.querySelectorAll('.preset-btn');
-const advancedFields = document.querySelectorAll('.advanced-field');
 
 let draftSaveTimeout;
 
@@ -114,33 +81,6 @@ const getFormValues = () => ({
   promoCode: promoInput.value.trim().toUpperCase(),
 });
 
-const updateFormProgress = () => {
-  const values = getFormValues();
-  const checks = [
-    values.projectName.length > 1,
-    values.quantity > 0 && !Number.isNaN(values.quantity),
-    values.weight > 0 && !Number.isNaN(values.weight),
-    values.useCase.length > 0,
-    emailInput.value.trim().includes('@'),
-  ];
-
-  const completeCount = checks.filter(Boolean).length;
-  const percent = Math.round((completeCount / checks.length) * 100);
-
-  progressFill.style.width = `${percent}%`;
-  progressTrack.setAttribute('aria-valuenow', String(percent));
-
-  if (percent < 40) {
-    progressLabel.textContent = 'Start with project basics (name, quantity, and weight).';
-  } else if (percent < 80) {
-    progressLabel.textContent = 'Great. Add contact details so we can confirm print settings.';
-  } else {
-    progressLabel.textContent = 'Looks good — you can confirm your estimate now.';
-  }
-
-  confirmEstimateBtn.disabled = percent < 80;
-};
-
 const updatePromoStatus = (promoCode) => {
   if (!promoCode) {
     promoStatus.textContent = 'Try WELCOME10 or MAKER5.';
@@ -160,16 +100,10 @@ const updatePromoStatus = (promoCode) => {
   promoStatus.classList.remove('is-valid');
 };
 
-const computeQuote = () => {
-  const values = getFormValues();
+const calculateQuote = (overrides = {}) => {
+  const values = { ...getFormValues(), ...overrides };
 
-  if (
-    !values.projectName
-    || values.quantity <= 0
-    || values.weight <= 0
-    || Number.isNaN(values.quantity)
-    || Number.isNaN(values.weight)
-  ) {
+  if (!values.projectName || values.quantity <= 0 || values.weight <= 0 || Number.isNaN(values.quantity) || Number.isNaN(values.weight)) {
     return {
       isValid: false,
       promoCode: values.promoCode,
@@ -196,19 +130,14 @@ const computeQuote = () => {
       ? 'about 4–6 business days'
       : 'about 2–4 business days';
 
-  const shippingText =
-    values.delivery === 'pickup' ? 'Local pickup selected' : shipping === 0 ? 'Free shipping' : `${currency.format(shipping)} shipping`;
-
   return {
     isValid: true,
     ...values,
     leadTimeDays,
     fileText: values.hasUploadedFile ? 'File received.' : 'No file uploaded yet.',
-    shippingText,
     printCost,
     rushFee,
     designReviewFee,
-    subtotal,
     setupHelpFee,
     shipping,
     discount,
@@ -235,13 +164,12 @@ const persistDraft = () => {
     promoCode: promoInput.value,
     rush: rushCheckbox.checked,
     designHelp: designHelpCheckbox.checked,
-    beginnerMode: beginnerModeCheckbox.checked,
   };
 
   try {
     localStorage.setItem(draftStorageKey, JSON.stringify(draft));
     setDraftStatus('Draft saved.');
-  } catch (error) {
+  } catch {
     setDraftStatus('Could not save draft in this browser.');
   }
 };
@@ -253,10 +181,9 @@ const scheduleDraftSave = () => {
 
 const loadDraft = () => {
   let rawDraft;
-
   try {
     rawDraft = localStorage.getItem(draftStorageKey);
-  } catch (error) {
+  } catch {
     setDraftStatus('Draft storage is unavailable in this browser.');
     return;
   }
@@ -278,18 +205,15 @@ const loadDraft = () => {
     promoInput.value = draft.promoCode ?? '';
     rushCheckbox.checked = Boolean(draft.rush);
     designHelpCheckbox.checked = Boolean(draft.designHelp);
-    beginnerModeCheckbox.checked = Boolean(draft.beginnerMode);
 
     const delivery = draft.delivery === 'pickup' ? 'pickup' : 'ship';
     const deliveryInput = document.querySelector(`input[name="delivery"][value="${delivery}"]`);
-
     if (deliveryInput) {
       deliveryInput.checked = true;
     }
 
     setDraftStatus('Loaded your saved draft.');
-    applyBeginnerMode(beginnerModeCheckbox.checked);
-  } catch (error) {
+  } catch {
     setDraftStatus('Could not load saved draft. Starting fresh.');
   }
 };
@@ -297,56 +221,23 @@ const loadDraft = () => {
 const clearDraft = () => {
   try {
     localStorage.removeItem(draftStorageKey);
-  } catch (error) {
+  } catch {
     // ignore storage removal failures
   }
 
   form.reset();
   const shipOption = document.querySelector('input[name="delivery"][value="ship"]');
-
   if (shipOption) {
     shipOption.checked = true;
   }
 
-  beginnerModeCheckbox.checked = false;
-  applyBeginnerMode(false);
+  optionCards.innerHTML = `
+    <article class="option-card"><h4>Budget</h4><p>Add project details to generate options.</p></article>
+    <article class="option-card"><h4>Balanced</h4><p>We will show speed/cost tradeoffs here.</p></article>
+    <article class="option-card"><h4>Premium</h4><p>Best finish and support recommendations appear here.</p></article>`;
+
   setDraftStatus('Saved draft cleared.');
   nextSteps.hidden = true;
-  renderLiveEstimate();
-};
-
-
-const applyBeginnerMode = (enabled) => {
-  advancedFields.forEach((field) => {
-    field.hidden = enabled;
-  });
-
-  beginnerHint.hidden = !enabled;
-
-  if (enabled) {
-    colorProfileInput.value = 'standard';
-    finishInput.value = 'standard';
-    promoInput.value = '';
-    rushCheckbox.checked = false;
-    designHelpCheckbox.checked = false;
-  }
-};
-
-const applyPreset = (presetName) => {
-  const preset = presets[presetName];
-
-  if (!preset) {
-    return;
-  }
-
-  projectNameInput.value = preset.projectName;
-  materialInput.value = preset.material;
-  quantityInput.value = preset.quantity;
-  weightInput.value = preset.weight;
-  finishInput.value = preset.finish;
-  useCaseInput.value = preset.useCase;
-
-  scheduleDraftSave();
   renderLiveEstimate();
 };
 
@@ -357,7 +248,6 @@ const renderLiveBreakdown = (quote) => {
   }
 
   const discountText = quote.hasPromo ? `-${currency.format(quote.discount)}` : 'none';
-
   liveBreakdown.innerHTML = `<li>Print cost: ${currency.format(quote.printCost)}</li>
     <li>Rush fee: ${currency.format(quote.rushFee)}</li>
     <li>Design review: ${currency.format(quote.designReviewFee)}</li>
@@ -366,9 +256,39 @@ const renderLiveBreakdown = (quote) => {
     <li>Promo discount: ${discountText}</li>`;
 };
 
-const renderLiveEstimate = () => {
-  const quote = computeQuote();
+const generateOptions = () => {
+  const base = calculateQuote();
 
+  if (!base.isValid) {
+    optionCards.innerHTML = '<article class="option-card"><h4>Need more info</h4><p>Enter project name, quantity, and weight first.</p></article>';
+    return;
+  }
+
+  const options = [
+    {
+      name: 'Budget',
+      quote: calculateQuote({ finish: 'standard', material: 'PLA', rush: false, designHelp: false, promoCode: '' }),
+      note: 'Lowest cost path for quick validation and test parts.',
+    },
+    {
+      name: 'Balanced',
+      quote: calculateQuote({ finish: base.finish, material: base.material, rush: false, designHelp: false, promoCode: base.promoCode }),
+      note: 'Keeps your selected material while avoiding rush or extra services.',
+    },
+    {
+      name: 'Premium',
+      quote: calculateQuote({ finish: 'premium', material: base.material === 'PLA' ? 'PETG' : base.material, rush: true, designHelp: true, promoCode: base.promoCode }),
+      note: 'Best polish and turnaround with added review support.',
+    },
+  ];
+
+  optionCards.innerHTML = options
+    .map(({ name, quote, note }) => `<article class="option-card"><h4>${name}</h4><p class="option-price">${currency.format(quote.total)}</p><p>${quote.leadTimeDays}</p><p>${note}</p></article>`)
+    .join('');
+};
+
+const renderLiveEstimate = () => {
+  const quote = calculateQuote();
   updatePromoStatus(quote.promoCode);
 
   if (!quote.isValid) {
@@ -376,7 +296,6 @@ const renderLiveEstimate = () => {
     estimateTimeline.textContent = 'Add valid project details to preview your estimate.';
     estimateMeta.textContent = 'Includes print cost, setup fee, and delivery.';
     renderLiveBreakdown(quote);
-    updateFormProgress();
     return;
   }
 
@@ -394,7 +313,6 @@ const renderLiveEstimate = () => {
   }
 
   renderLiveBreakdown(quote);
-  updateFormProgress();
 };
 
 const handleFormUpdate = () => {
@@ -405,18 +323,11 @@ const handleFormUpdate = () => {
 form.addEventListener('input', handleFormUpdate);
 form.addEventListener('change', handleFormUpdate);
 clearDraftButton.addEventListener('click', clearDraft);
-beginnerModeCheckbox.addEventListener('change', () => {
-  applyBeginnerMode(beginnerModeCheckbox.checked);
-  handleFormUpdate();
-});
-presetButtons.forEach((button) => {
-  button.addEventListener('click', () => applyPreset(button.dataset.preset));
-});
+generateOptionsButton.addEventListener('click', generateOptions);
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
-
-  const quote = computeQuote();
+  const quote = calculateQuote();
 
   if (!quote.isValid) {
     estimateMeta.textContent = quote.message;
@@ -431,5 +342,4 @@ form.addEventListener('submit', (event) => {
 });
 
 loadDraft();
-applyBeginnerMode(beginnerModeCheckbox.checked);
 renderLiveEstimate();

@@ -114,6 +114,54 @@ button:hover {
 .hero-card,
 .testimonial-card,
 .faq-grid details,
+
+.option-lab {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.option-lab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.option-lab-header h3 {
+  margin: 0;
+}
+
+.option-lab-copy {
+  margin: 0.35rem 0 0.75rem;
+  color: var(--ink-light);
+}
+
+.option-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.option-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: #fff9f1;
+}
+
+.option-card h4 {
+  margin: 0;
+}
+
+.option-price {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0.35rem 0;
+  color: var(--accent-dark);
+}
 .quote-next-steps {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -195,7 +243,6 @@ button:hover {
   color: var(--ink-light);
 }
 
-
 .beginner-grid,
 .samples-grid {
   display: grid;
@@ -232,88 +279,6 @@ button:hover {
   margin-bottom: 1rem;
 }
 
-
-.quote-tools,
-.term-guide {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 0.9rem 1rem;
-  margin-bottom: 0.9rem;
-}
-
-.tool-title {
-  margin: 0;
-  font-weight: 800;
-}
-
-.preset-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 0.65rem;
-}
-
-.preset-btn {
-  border: 1px solid #d9bea0;
-  background: #fff8ef;
-  color: var(--ink);
-  border-radius: 999px;
-  padding: 0.42rem 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.beginner-toggle {
-  margin-top: 0.7rem;
-}
-
-.beginner-hint {
-  margin: 0.35rem 0 0;
-  color: var(--ink-light);
-  font-weight: 700;
-}
-
-.term-guide summary {
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.term-guide ul {
-  margin: 0.55rem 0 0;
-  color: var(--ink-light);
-}
-
-.form-progress {
-  background: #fff8ef;
-  border: 1px solid #e5c7a0;
-  border-radius: 12px;
-  padding: 0.75rem 0.9rem;
-  margin-bottom: 1rem;
-}
-
-.progress-label {
-  margin: 0;
-  font-weight: 700;
-  color: var(--ink-light);
-}
-
-.progress-track {
-  margin-top: 0.55rem;
-  height: 10px;
-  border-radius: 999px;
-  background: #f0ddc4;
-  overflow: hidden;
-}
-
-.progress-fill {
-  display: block;
-  height: 100%;
-  width: 0;
-  border-radius: 999px;
-  background: var(--accent);
-  transition: width 160ms ease;
-}
 .quote-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -392,17 +357,11 @@ button:hover {
   cursor: pointer;
 }
 
-.quote-form button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
 .quote-form .secondary-btn {
   background: #efe2d1;
   color: var(--ink);
   border: 1px solid #d9bea0;
 }
-
 
 .promo-status {
   grid-column: 1 / -1;
@@ -467,7 +426,6 @@ button:hover {
   color: var(--ink-light);
 }
 
-
 .live-breakdown {
   margin: 0.65rem 0 0;
   padding-left: 1.1rem;
@@ -476,6 +434,54 @@ button:hover {
 
 .live-breakdown li + li {
   margin-top: 0.2rem;
+}
+
+.option-lab {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.option-lab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.option-lab-header h3 {
+  margin: 0;
+}
+
+.option-lab-copy {
+  margin: 0.35rem 0 0.75rem;
+  color: var(--ink-light);
+}
+
+.option-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.option-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: #fff9f1;
+}
+
+.option-card h4 {
+  margin: 0;
+}
+
+.option-price {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0.35rem 0;
+  color: var(--accent-dark);
 }
 .quote-next-steps {
   margin-top: 1rem;
@@ -542,7 +548,8 @@ button:hover {
   .steps,
   .quote-form,
   .form-actions,
-  .beginner-grid {
+  .beginner-grid,
+  .option-cards {
     grid-template-columns: 1fr;
   }
 }
