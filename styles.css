@@ -1,14 +1,14 @@
 :root {
-  --bg: #fffaf3;
-  --surface: #ffffff;
-  --surface-soft: #fff3e3;
-  --ink: #2f241b;
-  --ink-light: #69584c;
-  --accent: #b45f06;
-  --accent-dark: #8e4a03;
-  --line: #edd8bf;
+  --bg: #0f1115;
+  --surface: #171a21;
+  --surface-soft: #131720;
+  --ink: #eceff4;
+  --ink-light: #a9b1c2;
+  --accent: #7c9cff;
+  --accent-dark: #5f7de0;
+  --line: #2a3040;
   --radius: 14px;
-  --shadow: 0 12px 24px rgba(89, 64, 41, 0.1);
+  --shadow: 0 14px 28px rgba(0, 0, 0, 0.38);
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -31,7 +31,7 @@ body {
 }
 
 .site-header {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(20, 24, 33, 0.82);
   border-bottom: 1px solid var(--line);
   position: sticky;
   top: 0;
@@ -111,7 +111,7 @@ h1 {
 
 .cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 18px rgba(122, 76, 36, 0.24);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
 }
 
 .cta:hover,
@@ -157,14 +157,14 @@ button:hover {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.8rem;
-  background: #fff9f1;
+  background: #1b212d;
   transition: transform 260ms var(--ease-smooth), box-shadow 260ms var(--ease-smooth), border-color 220ms ease;
 }
 
 .option-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 18px rgba(122, 82, 44, 0.12);
-  border-color: #e5c7a0;
+  box-shadow: 0 12px 18px rgba(0, 0, 0, 0.3);
+  border-color: #36435f;
 }
 
 .option-card h4 {
@@ -190,9 +190,9 @@ button:hover {
 .mission-lab-featured {
   margin-top: 1.2rem;
   margin-bottom: 1.2rem;
-  border: 2px solid #e5b277;
-  box-shadow: 0 8px 24px rgba(59, 39, 24, 0.08);
-  background: linear-gradient(180deg, #fffaf3 0%, #fff 100%);
+  border: 2px solid #3d4d73;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(180deg, #1a2233 0%, #171a21 100%);
   position: relative;
   overflow: hidden;
   animation: fade-up 520ms var(--ease-smooth) both;
@@ -217,9 +217,9 @@ button:hover {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 800;
-  color: #8a4f16;
-  background: #ffe2bf;
-  border: 1px solid #efbf8a;
+  color: #a9c0ff;
+  background: #2a3550;
+  border: 1px solid #465e95;
   border-radius: 999px;
   padding: 0.18rem 0.6rem;
 }
@@ -232,7 +232,7 @@ button:hover {
   width: 100%;
   margin-top: 0.35rem;
   border-radius: 10px;
-  border: 1px solid #dcc3a3;
+  border: 1px solid #37445f;
   padding: 0.65rem;
   font: inherit;
   resize: vertical;
@@ -240,8 +240,8 @@ button:hover {
 
 .mission-result {
   margin-top: 0.85rem;
-  background: #fff8ef;
-  border: 1px solid #e5c7a0;
+  background: #1b2331;
+  border: 1px solid #36435f;
   border-radius: 10px;
   padding: 0.7rem 0.8rem;
   color: var(--ink-light);
@@ -314,7 +314,7 @@ button:hover {
 .step-image {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid #e5c7a0;
+  border: 1px solid #36435f;
   margin-bottom: 0.7rem;
 }
 
@@ -368,13 +368,13 @@ button:hover {
 .samples-grid img {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid #e5c7a0;
+  border: 1px solid #36435f;
 }
 
 .field-help {
   margin-top: -0.05rem;
   font-weight: 600;
-  color: #826650;
+  color: #a7b3c9;
 }
 .quote-intro {
   color: var(--ink-light);
@@ -408,7 +408,7 @@ button:hover {
 
 .delivery-fieldset,
 .customization-fieldset {
-  border: 1px solid #dcc3a3;
+  border: 1px solid #37445f;
   border-radius: 9px;
   padding: 0.65rem 0.75rem;
   margin: 0;
@@ -419,7 +419,7 @@ button:hover {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
-  background: #fffaf3;
+  background: #171d2a;
 }
 
 .delivery-fieldset legend,
@@ -449,8 +449,9 @@ button:hover {
 .quote-form select {
   padding: 0.65rem;
   border-radius: 9px;
-  border: 1px solid #dcc3a3;
-  background: #fff;
+  border: 1px solid #37445f;
+  background: #111722;
+  color: var(--ink);
 }
 
 .form-actions {
@@ -473,13 +474,13 @@ button:hover {
 
 .quote-form button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 14px rgba(122, 76, 36, 0.2);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
 }
 
 .quote-form .secondary-btn {
-  background: #efe2d1;
+  background: #2a3345;
   color: var(--ink);
-  border: 1px solid #d9bea0;
+  border: 1px solid #42506e;
 }
 
 .promo-status {
@@ -491,11 +492,11 @@ button:hover {
 }
 
 .promo-status.is-valid {
-  color: #2a7a32;
+  color: #63d689;
 }
 
 .promo-status.is-invalid {
-  color: #9a2b2b;
+  color: #ff7b7b;
 }
 .checkbox-row {
   flex-direction: row !important;
@@ -521,8 +522,8 @@ button:hover {
 
 .live-estimate {
   margin-top: 1rem;
-  background: #fff7ec;
-  border: 1px solid #e7c9a2;
+  background: #1c2433;
+  border: 1px solid #3a4a6a;
   border-radius: 10px;
   padding: 0.9rem 1rem;
 }
@@ -536,7 +537,7 @@ button:hover {
   margin: 0.35rem 0;
   font-size: 1.8rem;
   font-weight: 800;
-  color: #8e4a03;
+  color: #8ea8ff;
 }
 
 .live-estimate-time,
@@ -589,7 +590,7 @@ button:hover {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.8rem;
-  background: #fff9f1;
+  background: #1b212d;
 }
 
 .option-card h4 {
@@ -620,7 +621,7 @@ button:hover {
   width: 100%;
   margin-top: 0.35rem;
   border-radius: 10px;
-  border: 1px solid #dcc3a3;
+  border: 1px solid #37445f;
   padding: 0.65rem;
   font: inherit;
   resize: vertical;
@@ -628,8 +629,8 @@ button:hover {
 
 .mission-result {
   margin-top: 0.85rem;
-  background: #fff8ef;
-  border: 1px solid #e5c7a0;
+  background: #1b2331;
+  border: 1px solid #36435f;
   border-radius: 10px;
   padding: 0.7rem 0.8rem;
   color: var(--ink-light);
