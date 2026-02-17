@@ -160,6 +160,13 @@ button:hover {
   padding: 1rem;
 }
 
+.step-image {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #e5c7a0;
+  margin-bottom: 0.7rem;
+}
+
 .steps span {
   display: inline-flex;
   width: 1.9rem;
@@ -188,6 +195,37 @@ button:hover {
   color: var(--ink-light);
 }
 
+
+.beginner-grid,
+.samples-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.samples-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.beginner-grid article,
+.samples-grid article {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.samples-grid img {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #e5c7a0;
+}
+
+.field-help {
+  margin-top: -0.05rem;
+  font-weight: 600;
+  color: #826650;
+}
 .quote-intro {
   color: var(--ink-light);
   margin-top: -0.2rem;
@@ -403,7 +441,8 @@ button:hover {
 @media (max-width: 930px) {
   .hero-grid,
   .about-grid,
-  .faq-grid {
+  .faq-grid,
+  .samples-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -415,7 +454,8 @@ button:hover {
 
   .steps,
   .quote-form,
-  .form-actions {
+  .form-actions,
+  .beginner-grid {
     grid-template-columns: 1fr;
   }
 }

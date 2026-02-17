@@ -49,19 +49,22 @@
           <h2>How ordering works</h2>
           <div class="steps">
             <article>
+              <img class="step-image" src="assets/step-share.svg" alt="Example of uploading a file and project details" />
               <span>1</span>
               <h3>Share your idea</h3>
-              <p>Upload an STL/OBJ/3MF file and tell us what the part needs to do.</p>
+              <p>Upload an STL/OBJ/3MF file (or even a sketch/photo) and tell us what the part needs to do.</p>
             </article>
             <article>
+              <img class="step-image" src="assets/step-review.svg" alt="Shop owner reviewing a project and suggesting options" />
               <span>2</span>
               <h3>We suggest the setup</h3>
-              <p>We'll recommend material and quality settings based on strength, detail, and budget.</p>
+              <p>We explain materials and quality in plain English, then recommend the best setup for your goal and budget.</p>
             </article>
             <article>
+              <img class="step-image" src="assets/step-print.svg" alt="Finished 3D print ready for pickup or shipping" />
               <span>3</span>
               <h3>Approve and print</h3>
-              <p>You get a clear quote, timeline, and progress updates until pickup or shipping.</p>
+              <p>You approve the estimate, and we send progress updates until pickup or shipping.</p>
             </article>
           </div>
         </div>
@@ -87,6 +90,44 @@
               Fast replies, clean prints, and no pressure.”
             </p>
             <p class="owner-meta">— Mina, local candle shop owner</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="beginners-guide">
+        <div class="container">
+          <h2>New to 3D printing? Start here.</h2>
+          <div class="beginner-grid">
+            <article>
+              <h3>1) You do not need perfect files</h3>
+              <p>No CAD experience? No problem. A rough file, photo, or sketch is enough for us to advise next steps.</p>
+            </article>
+            <article>
+              <h3>2) We help with material choices</h3>
+              <p>Tell us where the part will be used (heat, outdoor, display, etc.) and we will suggest what works best.</p>
+            </article>
+            <article>
+              <h3>3) Your quote is a friendly estimate</h3>
+              <p>Instant pricing gives a fast range. We confirm details by email before printing anything.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="sample-projects">
+        <div class="container">
+          <h2>Example projects and ballpark pricing</h2>
+          <div class="samples-grid">
+            <article>
+              <img src="assets/sample-clip.svg" alt="Example replacement clip print" />
+              <h3>Replacement clip set</h3>
+              <p>Typical range: $14–$26 · 2–4 business days</p>
+            </article>
+            <article>
+              <img src="assets/sample-figurine.svg" alt="Example display figurine print" />
+              <h3>Display figurine</h3>
+              <p>Typical range: $22–$48 · 3–6 business days</p>
+            </article>
           </div>
         </div>
       </section>
@@ -129,6 +170,7 @@
             <label>
               Estimated print weight (grams)
               <input type="number" id="weight" name="weight" value="60" min="5" max="1500" required />
+              <small class="field-help">Not sure? Keep the default and we will fine-tune after file review.</small>
             </label>
 
             <label>
@@ -137,6 +179,7 @@
                 <option value="standard">Standard</option>
                 <option value="premium">Premium cleanup</option>
               </select>
+              <small class="field-help">Standard keeps visible print lines. Premium includes extra cleanup for smoother parts.</small>
             </label>
 
             <label>
@@ -164,7 +207,8 @@
 
             <label>
               Upload 3D file (optional)
-              <input type="file" id="modelFile" name="modelFile" accept=".stl,.obj,.3mf" />
+              <input type="file" id="modelFile" name="modelFile" accept=".stl,.obj,.3mf,.png,.jpg,.jpeg,.pdf" />
+              <small class="field-help">No model file yet? Upload a photo, sketch, or reference PDF.</small>
             </label>
 
             <label>
