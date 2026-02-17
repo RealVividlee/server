@@ -6,6 +6,8 @@ const { URL } = require('url');
 const host = '0.0.0.0';
 const port = Number(process.env.PORT || 4173);
 const rootDir = __dirname;
+const openAiApiKey = process.env.OPENAI_API_KEY;
+const openAiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -18,6 +20,11 @@ const mimeTypes = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
 };
+
+const allowedMaterials = new Set(['PLA', 'PETG', 'ABS', 'TPU']);
+const allowedFinishes = new Set(['standard', 'premium']);
+const allowedColorProfiles = new Set(['standard', 'matte', 'silk', 'translucent']);
+const allowedUseCases = new Set(['prototype', 'display', 'replacement', 'gift']);
 
 const heuristicMissionPlan = (text) => {
   const normalized = String(text || '').toLowerCase();
@@ -68,6 +75,90 @@ const heuristicMissionPlan = (text) => {
   return plan;
 };
 
+const sanitizePlan = (plan, fallbackReason) => {
+  const material = allowedMaterials.has(plan?.material) ? plan.material : 'PLA';
+  const finish = allowedFinishes.has(plan?.finish) ? plan.finish : 'standard';
+  const colorProfile = allowedColorProfiles.has(plan?.colorProfile) ? plan.colorProfile : 'standard';
+  const useCase = allowedUseCases.has(plan?.useCase) ? plan.useCase : 'prototype';
+
+  return {
+    material,
+    finish,
+    colorProfile,
+    rush: Boolean(plan?.rush),
+    designHelp: Boolean(plan?.designHelp),
+    useCase,
+    reasons: Array.isArray(plan?.reasons) && plan.reasons.length > 0
+      ? plan.reasons.filter((reason) => typeof reason === 'string').slice(0, 4)
+      : [fallbackReason],
+  };
+};
+
+const fetchOpenAiPlan = async (mission) => {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${openAiApiKey}`,
+    },
+    body: JSON.stringify({
+      model: openAiModel,
+      temperature: 0.2,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a print job planner. Return ONLY JSON with keys: material, finish, colorProfile, rush, designHelp, useCase, reasons. material must be one of PLA, PETG, ABS, TPU. finish must be standard or premium. colorProfile must be standard, matte, silk, or translucent. useCase must be prototype, display, replacement, or gift. reasons must be a short array of plain-English strings.',
+        },
+        {
+          role: 'user',
+          content: `Mission: ${mission}`,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`OpenAI request failed (${response.status}): ${body.slice(0, 250)}`);
+  }
+
+  const data = await response.json();
+  const content = data?.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error('OpenAI response did not include message content.');
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new Error('OpenAI content was not valid JSON.');
+  }
+
+  return sanitizePlan(parsed, 'OpenAI returned an incomplete plan; using safe defaults.');
+};
+
+const getMissionPlan = async (mission) => {
+  if (!openAiApiKey) {
+    const fallback = heuristicMissionPlan(mission);
+    return {
+      ...fallback,
+      reasons: [...fallback.reasons, 'OPENAI_API_KEY not configured, using local rules fallback.'],
+    };
+  }
+
+  try {
+    return await fetchOpenAiPlan(mission);
+  } catch (error) {
+    const fallback = heuristicMissionPlan(mission);
+    return {
+      ...fallback,
+      reasons: [...fallback.reasons, `OpenAI call failed, using local rules fallback. (${error.message})`],
+    };
+  }
+};
+
 const sendJson = (res, statusCode, body) => {
   const payload = JSON.stringify(body);
   res.writeHead(statusCode, {
@@ -77,7 +168,7 @@ const sendJson = (res, statusCode, body) => {
   res.end(payload);
 };
 
-const serveStatic = (req, res, pathname) => {
+const serveStatic = (res, pathname) => {
   const safePath = pathname === '/' ? '/index.html' : pathname;
   const resolved = path.resolve(rootDir, `.${safePath}`);
 
@@ -119,7 +210,7 @@ const server = http.createServer((req, res) => {
       }
     });
 
-    req.on('end', () => {
+    req.on('end', async () => {
       let body;
       try {
         body = raw ? JSON.parse(raw) : {};
@@ -134,8 +225,12 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      const plan = heuristicMissionPlan(mission);
-      sendJson(res, 200, plan);
+      try {
+        const plan = await getMissionPlan(mission);
+        sendJson(res, 200, plan);
+      } catch {
+        sendJson(res, 500, { error: 'Mission translation failed.' });
+      }
     });
 
     return;
@@ -146,9 +241,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  serveStatic(req, res, requestUrl.pathname);
+  serveStatic(res, requestUrl.pathname);
 });
 
 server.listen(port, host, () => {
   console.log(`Server running at http://${host}:${port}`);
+  console.log(openAiApiKey
+    ? `OpenAI integration enabled (model: ${openAiModel}).`
+    : 'OpenAI integration disabled (set OPENAI_API_KEY to enable).');
 });
