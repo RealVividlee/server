@@ -233,6 +233,8 @@ button:hover {
   margin-top: 0.35rem;
   border-radius: 10px;
   border: 1px solid #37445f;
+  background: #111722;
+  color: var(--ink);
   padding: 0.65rem;
   font: inherit;
   resize: vertical;
@@ -402,6 +404,29 @@ button:hover {
 
 .quote-form input,
 .quote-form select,
+
+.mission-lab .form-actions button {
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  transition: transform 220ms var(--ease-smooth), box-shadow 220ms var(--ease-smooth), background-color 180ms ease;
+}
+
+.mission-lab .form-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+}
+
+.mission-lab .form-actions .secondary-btn {
+  background: #2a3345;
+  color: var(--ink);
+  border: 1px solid #42506e;
+}
+
 .quote-form button {
   font: inherit;
 }
@@ -622,6 +647,8 @@ button:hover {
   margin-top: 0.35rem;
   border-radius: 10px;
   border: 1px solid #37445f;
+  background: #111722;
+  color: var(--ink);
   padding: 0.65rem;
   font: inherit;
   resize: vertical;

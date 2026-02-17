@@ -55,7 +55,6 @@ const estimateTimeline = document.getElementById('live-estimate-time');
 const estimateMeta = document.getElementById('live-estimate-meta');
 const liveBreakdown = document.getElementById('live-breakdown');
 const optionCards = document.getElementById('option-cards');
-const generateOptionsButton = document.getElementById('generateOptions');
 const missionInput = document.getElementById('missionInput');
 const missionResult = document.getElementById('missionResult');
 const missionMode = document.getElementById('missionMode');
@@ -269,6 +268,10 @@ const loadDraft = () => {
 };
 
 const resetOptionCards = () => {
+  if (!optionCards) {
+    return;
+  }
+
   optionCards.innerHTML = `
     <article class="option-card"><h4>Budget</h4><p>Add project details to generate options.</p></article>
     <article class="option-card"><h4>Balanced</h4><p>We will show speed/cost tradeoffs here.</p></article>
@@ -332,6 +335,10 @@ const renderLiveBreakdown = (quote) => {
 };
 
 const generateOptions = () => {
+  if (!optionCards) {
+    return;
+  }
+
   const base = calculateQuote();
 
   if (!base.isValid) {
@@ -572,7 +579,6 @@ const handleFormUpdate = () => {
 form.addEventListener('input', handleFormUpdate);
 form.addEventListener('change', handleFormUpdate);
 clearDraftButton.addEventListener('click', clearDraft);
-generateOptionsButton.addEventListener('click', generateOptions);
 translateMissionButton.addEventListener('click', translateMission);
 missionMode.addEventListener('change', () => {
   updateMissionModeLabel();
