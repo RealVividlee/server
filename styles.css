@@ -796,6 +796,54 @@ button:hover {
   text-transform: uppercase;
 }
 
+
+.material-variants-link {
+  display: inline-block;
+  margin-top: 0.65rem;
+  color: #b8c9ff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.material-variants-link:hover {
+  color: #d4ddff;
+  text-decoration: underline;
+}
+
+.variant-list {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.variant-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.8rem;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.variant-image {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #36435f;
+}
+
+.variant-card h3 {
+  margin: 0;
+}
+
+.variant-card p {
+  margin: 0.35rem 0 0;
+  color: var(--ink-light);
+}
+
 .material-card h3 {
   margin-top: 0;
   margin-bottom: 0.3rem;
@@ -860,6 +908,10 @@ button:hover {
   .samples-grid,
   .page-links-grid,
   .materials-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .variant-card {
     grid-template-columns: 1fr;
   }
 
