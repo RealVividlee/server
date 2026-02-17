@@ -162,6 +162,39 @@ button:hover {
   margin: 0.35rem 0;
   color: var(--accent-dark);
 }
+
+.mission-lab {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.mission-lab h3 {
+  margin-top: 0;
+  margin-bottom: 0.35rem;
+}
+
+.mission-lab textarea {
+  width: 100%;
+  margin-top: 0.35rem;
+  border-radius: 10px;
+  border: 1px solid #dcc3a3;
+  padding: 0.65rem;
+  font: inherit;
+  resize: vertical;
+}
+
+.mission-result {
+  margin-top: 0.85rem;
+  background: #fff8ef;
+  border: 1px solid #e5c7a0;
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  color: var(--ink-light);
+  font-weight: 600;
+}
 .quote-next-steps {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -500,6 +533,39 @@ button:hover {
   font-weight: 800;
   margin: 0.35rem 0;
   color: var(--accent-dark);
+}
+
+.mission-lab {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.mission-lab h3 {
+  margin-top: 0;
+  margin-bottom: 0.35rem;
+}
+
+.mission-lab textarea {
+  width: 100%;
+  margin-top: 0.35rem;
+  border-radius: 10px;
+  border: 1px solid #dcc3a3;
+  padding: 0.65rem;
+  font: inherit;
+  resize: vertical;
+}
+
+.mission-result {
+  margin-top: 0.85rem;
+  background: #fff8ef;
+  border: 1px solid #e5c7a0;
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  color: var(--ink-light);
+  font-weight: 600;
 }
 .quote-next-steps {
   margin-top: 1rem;

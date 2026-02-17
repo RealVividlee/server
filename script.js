@@ -34,6 +34,10 @@ const estimateMeta = document.getElementById('live-estimate-meta');
 const liveBreakdown = document.getElementById('live-breakdown');
 const optionCards = document.getElementById('option-cards');
 const generateOptionsButton = document.getElementById('generateOptions');
+const missionInput = document.getElementById('missionInput');
+const missionResult = document.getElementById('missionResult');
+const translateMissionButton = document.getElementById('translateMission');
+const applyMissionOptionButton = document.getElementById('applyMissionOption');
 const draftStatus = document.getElementById('draft-status');
 const promoStatus = document.getElementById('promo-status');
 const clearDraftButton = document.getElementById('clearDraft');
@@ -53,6 +57,7 @@ const emailInput = document.getElementById('email');
 const modelFileInput = document.getElementById('modelFile');
 
 let draftSaveTimeout;
+let translatedMissionPlan;
 
 year.textContent = new Date().getFullYear();
 
@@ -164,6 +169,7 @@ const persistDraft = () => {
     promoCode: promoInput.value,
     rush: rushCheckbox.checked,
     designHelp: designHelpCheckbox.checked,
+    missionInput: missionInput.value,
   };
 
   try {
@@ -205,6 +211,7 @@ const loadDraft = () => {
     promoInput.value = draft.promoCode ?? '';
     rushCheckbox.checked = Boolean(draft.rush);
     designHelpCheckbox.checked = Boolean(draft.designHelp);
+    missionInput.value = draft.missionInput ?? '';
 
     const delivery = draft.delivery === 'pickup' ? 'pickup' : 'ship';
     const deliveryInput = document.querySelector(`input[name="delivery"][value="${delivery}"]`);
@@ -216,6 +223,13 @@ const loadDraft = () => {
   } catch {
     setDraftStatus('Could not load saved draft. Starting fresh.');
   }
+};
+
+const resetOptionCards = () => {
+  optionCards.innerHTML = `
+    <article class="option-card"><h4>Budget</h4><p>Add project details to generate options.</p></article>
+    <article class="option-card"><h4>Balanced</h4><p>We will show speed/cost tradeoffs here.</p></article>
+    <article class="option-card"><h4>Premium</h4><p>Best finish and support recommendations appear here.</p></article>`;
 };
 
 const clearDraft = () => {
@@ -231,10 +245,9 @@ const clearDraft = () => {
     shipOption.checked = true;
   }
 
-  optionCards.innerHTML = `
-    <article class="option-card"><h4>Budget</h4><p>Add project details to generate options.</p></article>
-    <article class="option-card"><h4>Balanced</h4><p>We will show speed/cost tradeoffs here.</p></article>
-    <article class="option-card"><h4>Premium</h4><p>Best finish and support recommendations appear here.</p></article>`;
+  resetOptionCards();
+  missionResult.textContent = 'No mission translated yet.';
+  translatedMissionPlan = undefined;
 
   setDraftStatus('Saved draft cleared.');
   nextSteps.hidden = true;
@@ -287,6 +300,74 @@ const generateOptions = () => {
     .join('');
 };
 
+const translateMission = () => {
+  const text = missionInput.value.trim().toLowerCase();
+
+  if (!text) {
+    missionResult.textContent = 'Add a mission description first.';
+    translatedMissionPlan = undefined;
+    return;
+  }
+
+  const plan = {
+    material: 'PLA',
+    finish: 'standard',
+    colorProfile: 'standard',
+    rush: false,
+    designHelp: false,
+    useCase: 'prototype',
+    reasons: [],
+  };
+
+  if (text.includes('outdoor') || text.includes('sun') || text.includes('heat')) {
+    plan.material = 'PETG';
+    plan.reasons.push('Switched to PETG for better heat/outdoor durability.');
+  }
+
+  if (text.includes('detailed') || text.includes('clean') || text.includes('client') || text.includes('display')) {
+    plan.finish = 'premium';
+    plan.colorProfile = 'silk';
+    plan.useCase = 'display';
+    plan.reasons.push('Upgraded finish/color for presentation quality.');
+  }
+
+  if (text.includes('strong') || text.includes('load') || text.includes('weight') || text.includes('replacement')) {
+    plan.material = plan.material === 'PLA' ? 'PETG' : plan.material;
+    plan.useCase = 'replacement';
+    plan.designHelp = true;
+    plan.reasons.push('Enabled design review for structural reliability.');
+  }
+
+  if (text.includes('fast') || text.includes('urgent') || text.includes('tomorrow') || text.includes('asap')) {
+    plan.rush = true;
+    plan.reasons.push('Enabled rush production to reduce lead time.');
+  }
+
+  if (text.includes('gift')) {
+    plan.useCase = 'gift';
+  }
+
+  translatedMissionPlan = plan;
+  missionResult.innerHTML = `<strong>Recommended plan:</strong> ${plan.material}, ${plan.finish} finish, ${plan.colorProfile} color profile.${plan.rush ? ' Rush enabled.' : ''}${plan.designHelp ? ' Design review enabled.' : ''}<br>${plan.reasons.join(' ') || 'Using balanced defaults based on your note.'}`;
+};
+
+const applyTranslatedMission = () => {
+  if (!translatedMissionPlan) {
+    missionResult.textContent = 'Translate a mission first, then apply it.';
+    return;
+  }
+
+  materialInput.value = translatedMissionPlan.material;
+  finishInput.value = translatedMissionPlan.finish;
+  colorProfileInput.value = translatedMissionPlan.colorProfile;
+  rushCheckbox.checked = translatedMissionPlan.rush;
+  designHelpCheckbox.checked = translatedMissionPlan.designHelp;
+  useCaseInput.value = translatedMissionPlan.useCase;
+
+  missionResult.textContent = 'Translated plan applied to your quote form.';
+  handleFormUpdate();
+};
+
 const renderLiveEstimate = () => {
   const quote = calculateQuote();
   updatePromoStatus(quote.promoCode);
@@ -324,6 +405,8 @@ form.addEventListener('input', handleFormUpdate);
 form.addEventListener('change', handleFormUpdate);
 clearDraftButton.addEventListener('click', clearDraft);
 generateOptionsButton.addEventListener('click', generateOptions);
+translateMissionButton.addEventListener('click', translateMission);
+applyMissionOptionButton.addEventListener('click', applyTranslatedMission);
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -342,4 +425,5 @@ form.addEventListener('submit', (event) => {
 });
 
 loadDraft();
+resetOptionCards();
 renderLiveEstimate();
