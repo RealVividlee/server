@@ -161,6 +161,15 @@
             <h3>Mission translator (plain English → print plan)</h3>
             <p class="option-lab-copy">Describe what your part must survive, and we'll auto-tune the quote settings.</p>
             <label>
+              Translation mode
+              <select id="missionMode">
+                <option value="auto">Auto (AI first, fallback to rules)</option>
+                <option value="ai">AI only</option>
+                <option value="rules">Rules only</option>
+              </select>
+            </label>
+            <p class="mission-source" id="missionSource">Current mode: Auto (AI first, fallback to rules)</p>
+            <label>
               Describe your mission
               <textarea id="missionInput" rows="3" placeholder="Example: Needs to survive outdoor heat, hold weight, and look clean for a client demo."></textarea>
             </label>

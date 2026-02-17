@@ -36,6 +36,8 @@ const optionCards = document.getElementById('option-cards');
 const generateOptionsButton = document.getElementById('generateOptions');
 const missionInput = document.getElementById('missionInput');
 const missionResult = document.getElementById('missionResult');
+const missionMode = document.getElementById('missionMode');
+const missionSource = document.getElementById('missionSource');
 const translateMissionButton = document.getElementById('translateMission');
 const applyMissionOptionButton = document.getElementById('applyMissionOption');
 const draftStatus = document.getElementById('draft-status');
@@ -170,6 +172,7 @@ const persistDraft = () => {
     rush: rushCheckbox.checked,
     designHelp: designHelpCheckbox.checked,
     missionInput: missionInput.value,
+    missionMode: missionMode.value,
   };
 
   try {
@@ -212,6 +215,7 @@ const loadDraft = () => {
     rushCheckbox.checked = Boolean(draft.rush);
     designHelpCheckbox.checked = Boolean(draft.designHelp);
     missionInput.value = draft.missionInput ?? '';
+    missionMode.value = draft.missionMode ?? 'auto';
 
     const delivery = draft.delivery === 'pickup' ? 'pickup' : 'ship';
     const deliveryInput = document.querySelector(`input[name="delivery"][value="${delivery}"]`);
@@ -232,6 +236,20 @@ const resetOptionCards = () => {
     <article class="option-card"><h4>Premium</h4><p>Best finish and support recommendations appear here.</p></article>`;
 };
 
+const updateMissionModeLabel = () => {
+  if (missionMode.value === 'ai') {
+    missionSource.textContent = 'Current mode: AI only';
+    return;
+  }
+
+  if (missionMode.value === 'rules') {
+    missionSource.textContent = 'Current mode: Rules only';
+    return;
+  }
+
+  missionSource.textContent = 'Current mode: Auto (AI first, fallback to rules)';
+};
+
 const clearDraft = () => {
   try {
     localStorage.removeItem(draftStorageKey);
@@ -245,8 +263,10 @@ const clearDraft = () => {
     shipOption.checked = true;
   }
 
+  missionMode.value = 'auto';
   resetOptionCards();
   missionResult.textContent = 'No mission translated yet.';
+  updateMissionModeLabel();
   translatedMissionPlan = undefined;
 
   setDraftStatus('Saved draft cleared.');
@@ -300,15 +320,7 @@ const generateOptions = () => {
     .join('');
 };
 
-const translateMission = () => {
-  const text = missionInput.value.trim().toLowerCase();
-
-  if (!text) {
-    missionResult.textContent = 'Add a mission description first.';
-    translatedMissionPlan = undefined;
-    return;
-  }
-
+const heuristicMissionPlan = (text) => {
   const plan = {
     material: 'PLA',
     finish: 'standard',
@@ -317,6 +329,7 @@ const translateMission = () => {
     designHelp: false,
     useCase: 'prototype',
     reasons: [],
+    source: 'rules',
   };
 
   if (text.includes('outdoor') || text.includes('sun') || text.includes('heat')) {
@@ -347,7 +360,87 @@ const translateMission = () => {
     plan.useCase = 'gift';
   }
 
+  return plan;
+};
+
+const fetchAiMissionPlan = async (text) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4500);
+
+  try {
+    const response = await fetch('/api/mission-translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mission: text }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error('AI endpoint unavailable');
+    }
+
+    const data = await response.json();
+    const plan = {
+      material: data.material,
+      finish: data.finish,
+      colorProfile: data.colorProfile,
+      rush: Boolean(data.rush),
+      designHelp: Boolean(data.designHelp),
+      useCase: data.useCase,
+      reasons: Array.isArray(data.reasons) ? data.reasons : ['AI recommendation received.'],
+      source: 'ai',
+    };
+
+    if (!plan.material || !plan.finish || !plan.colorProfile || !plan.useCase) {
+      throw new Error('AI response was incomplete');
+    }
+
+    return plan;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+const translateMission = async () => {
+  const text = missionInput.value.trim().toLowerCase();
+
+  if (!text) {
+    missionResult.textContent = 'Add a mission description first.';
+    translatedMissionPlan = undefined;
+    return;
+  }
+
+  missionResult.textContent = 'Analyzing mission...';
+
+  let plan;
+  let usedSource = 'rules';
+
+  if (missionMode.value === 'ai' || missionMode.value === 'auto') {
+    try {
+      plan = await fetchAiMissionPlan(text);
+      usedSource = 'ai';
+    } catch {
+      if (missionMode.value === 'ai') {
+        missionResult.textContent = 'AI mode selected, but AI endpoint is not available. Switch to auto or rules mode.';
+        missionSource.textContent = 'Current mode: AI only (endpoint unavailable)';
+        translatedMissionPlan = undefined;
+        return;
+      }
+    }
+  }
+
+  if (!plan) {
+    plan = heuristicMissionPlan(text);
+    usedSource = 'rules';
+  }
+
   translatedMissionPlan = plan;
+  missionSource.textContent = usedSource === 'ai'
+    ? 'Source: AI recommendation'
+    : missionMode.value === 'auto'
+      ? 'Source: Rules fallback (AI unavailable)'
+      : 'Source: Rules engine';
+
   missionResult.innerHTML = `<strong>Recommended plan:</strong> ${plan.material}, ${plan.finish} finish, ${plan.colorProfile} color profile.${plan.rush ? ' Rush enabled.' : ''}${plan.designHelp ? ' Design review enabled.' : ''}<br>${plan.reasons.join(' ') || 'Using balanced defaults based on your note.'}`;
 };
 
@@ -406,6 +499,10 @@ form.addEventListener('change', handleFormUpdate);
 clearDraftButton.addEventListener('click', clearDraft);
 generateOptionsButton.addEventListener('click', generateOptions);
 translateMissionButton.addEventListener('click', translateMission);
+missionMode.addEventListener('change', () => {
+  updateMissionModeLabel();
+  persistDraft();
+});
 applyMissionOptionButton.addEventListener('click', applyTranslatedMission);
 
 form.addEventListener('submit', (event) => {
@@ -425,5 +522,6 @@ form.addEventListener('submit', (event) => {
 });
 
 loadDraft();
+updateMissionModeLabel();
 resetOptionCards();
 renderLiveEstimate();
