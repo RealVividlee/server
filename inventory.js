@@ -2,10 +2,25 @@ const inventoryUpdatedAt = document.getElementById('inventoryUpdatedAt');
 const inventorySections = document.getElementById('inventorySections');
 const amsSummary = document.getElementById('amsSummary');
 
-const statusLabel = {
+const filamentStatusLabel = {
   in_stock: 'In stock',
   low: 'Low stock',
   out: 'Out of stock',
+};
+
+const getStatusMeta = (sectionKey, status) => {
+  if (sectionKey === 'filament') {
+    return {
+      label: filamentStatusLabel[status] ?? status,
+      tone: status,
+    };
+  }
+
+  const isUnavailable = status === 'out';
+  return {
+    label: isUnavailable ? 'Unavailable' : 'Available',
+    tone: isUnavailable ? 'unavailable' : 'available',
+  };
 };
 
 const escapeHtml = (value) => String(value)
@@ -15,15 +30,18 @@ const escapeHtml = (value) => String(value)
   .replaceAll('"', '&quot;')
   .replaceAll("'", '&#39;');
 
-const renderTable = (title, items) => {
-  const rows = items.map((item) => `<tr>
+const renderTable = (sectionKey, title, items, classes = 'inventory-block') => {
+  const rows = items.map((item) => {
+    const statusMeta = getStatusMeta(sectionKey, item.status);
+    return `<tr>
       <td>${escapeHtml(item.name)}</td>
       <td>${escapeHtml(item.qty)} ${escapeHtml(item.unit)}</td>
-      <td><span class="inventory-status inventory-status-${escapeHtml(item.status)}">${escapeHtml(statusLabel[item.status] ?? item.status)}</span></td>
+      <td><span class="inventory-status inventory-status-${escapeHtml(statusMeta.tone)}">${escapeHtml(statusMeta.label)}</span></td>
       <td>${escapeHtml(item.notes ?? '')}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
-  return `<section class="inventory-block">
+  return `<section class="${classes}">
       <h3>${escapeHtml(title)}</h3>
       <div class="table-wrap">
         <table>
@@ -44,14 +62,19 @@ const renderInventory = () => {
 
   inventoryUpdatedAt.textContent = data.updatedAt ? `Last updated: ${data.updatedAt}` : 'Last updated: —';
 
-  const sections = [
-    ['Available filament', data.filament ?? []],
-    ['Printers', data.printers ?? []],
-    ['Build plates', data.buildPlates ?? []],
-    ['Nozzles', data.nozzles ?? []],
+  const featuredFilament = renderTable('filament', 'Available filament', data.filament ?? [], 'inventory-block inventory-block-featured');
+
+  const compactSections = [
+    ['printers', 'Printers', data.printers ?? []],
+    ['buildPlates', 'Build plates', data.buildPlates ?? []],
+    ['nozzles', 'Nozzles', data.nozzles ?? []],
   ];
 
-  inventorySections.innerHTML = sections.map(([title, items]) => renderTable(title, items)).join('');
+  const compactMarkup = compactSections
+    .map(([sectionKey, title, items]) => renderTable(sectionKey, title, items, 'inventory-block inventory-block-compact'))
+    .join('');
+
+  inventorySections.innerHTML = `${featuredFilament}<div class="inventory-compact-grid">${compactMarkup}</div>`;
 
   const ams = data.ams ?? {};
   const loaded = Array.isArray(ams.loaded) ? ams.loaded : [];

@@ -785,6 +785,33 @@ button:hover {
   padding: 1rem;
 }
 
+
+.inventory-block-featured {
+  border-color: #4d6394;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.36);
+  background: linear-gradient(180deg, #1a2233 0%, #171a21 100%);
+}
+
+.inventory-compact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.inventory-block-compact {
+  padding: 0.8rem;
+  margin-top: 0.8rem;
+}
+
+.inventory-block-compact h3 {
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.inventory-block-compact table {
+  font-size: 0.9rem;
+}
+
 .inventory-block h3 {
   margin-top: 0;
 }
@@ -810,6 +837,18 @@ button:hover {
 }
 
 .inventory-status-out {
+  background: rgba(230, 94, 94, 0.22);
+  color: #ff9f9f;
+  border: 1px solid rgba(255, 123, 123, 0.5);
+}
+
+.inventory-status-available {
+  background: rgba(124, 156, 255, 0.22);
+  color: #bfd0ff;
+  border: 1px solid rgba(124, 156, 255, 0.45);
+}
+
+.inventory-status-unavailable {
   background: rgba(230, 94, 94, 0.22);
   color: #ff9f9f;
   border: 1px solid rgba(255, 123, 123, 0.5);
@@ -970,7 +1009,8 @@ button:hover {
   .faq-grid,
   .samples-grid,
   .page-links-grid,
-  .materials-grid {
+  .materials-grid,
+  .inventory-compact-grid {
     grid-template-columns: 1fr;
   }
 
