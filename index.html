@@ -113,6 +113,15 @@
             </label>
 
             <label>
+              Color profile
+              <select id="colorProfile" name="colorProfile" required>
+                <option value="standard">Standard color</option>
+                <option value="silk">Silk / specialty finish</option>
+                <option value="custom">Custom color match</option>
+              </select>
+            </label>
+
+            <label>
               Quantity
               <input type="number" id="quantity" name="quantity" value="1" min="1" max="100" required />
             </label>
@@ -163,8 +172,35 @@
               <input type="email" id="email" name="email" placeholder="you@example.com" required />
             </label>
 
-            <button type="submit">Show estimate</button>
+            <label>
+              Promo code (optional)
+              <input type="text" id="promoCode" name="promoCode" placeholder="WELCOME10" maxlength="20" />
+            </label>
+
+            <label class="checkbox-row">
+              <input type="checkbox" id="rush" name="rush" />
+              Rush production (1–2 business days, +35%)
+            </label>
+
+            <label class="checkbox-row">
+              <input type="checkbox" id="designHelp" name="designHelp" />
+              Need printability/design review (+$12)
+            </label>
+
+            <div class="form-actions">
+              <button type="submit">Show estimate</button>
+              <button type="button" id="clearDraft" class="secondary-btn">Clear saved draft</button>
+            </div>
           </form>
+
+          <p class="draft-status" id="draft-status" aria-live="polite">Draft is saved automatically in this browser.</p>
+
+          <aside class="live-estimate" aria-live="polite">
+            <h3>Live estimate preview</h3>
+            <p class="live-estimate-value" id="live-estimate-value">—</p>
+            <p class="live-estimate-time" id="live-estimate-time">Add valid project details to preview your estimate.</p>
+            <p class="live-estimate-meta" id="live-estimate-meta">Includes print cost, setup fee, and delivery.</p>
+          </aside>
 
           <div class="quote-result" id="quote-result" aria-live="polite">
             Fill in your details and we'll show a quick estimate.
