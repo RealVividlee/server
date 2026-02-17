@@ -171,6 +171,28 @@ button:hover {
   padding: 1rem;
 }
 
+
+.mission-lab-featured {
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+  border: 2px solid #e5b277;
+  box-shadow: 0 8px 24px rgba(59, 39, 24, 0.08);
+  background: linear-gradient(180deg, #fffaf3 0%, #fff 100%);
+}
+
+.mission-kicker {
+  margin: 0 0 0.45rem;
+  display: inline-block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  color: #8a4f16;
+  background: #ffe2bf;
+  border: 1px solid #efbf8a;
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem;
+}
 .mission-lab h3 {
   margin-top: 0;
   margin-bottom: 0.35rem;

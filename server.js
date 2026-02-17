@@ -120,7 +120,25 @@ const fetchOpenAiPlan = async (mission) => {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`OpenAI request failed (${response.status}): ${body.slice(0, 250)}`);
+    let message = `OpenAI request failed (${response.status}).`;
+
+    try {
+      const parsedError = JSON.parse(body);
+      const apiMessage = parsedError?.error?.message;
+      if (typeof apiMessage === 'string' && apiMessage.trim()) {
+        if (response.status === 429) {
+          message = 'OpenAI quota exceeded or billing not active.';
+        } else {
+          message = `OpenAI error: ${apiMessage.trim().slice(0, 120)}`;
+        }
+      }
+    } catch {
+      // keep generic message
+    }
+
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
 
   const data = await response.json();
@@ -152,9 +170,20 @@ const getMissionPlan = async (mission) => {
     return await fetchOpenAiPlan(mission);
   } catch (error) {
     const fallback = heuristicMissionPlan(mission);
+    const status = Number(error?.status);
+    let reason = 'OpenAI was unavailable, using local rules fallback.';
+
+    if (status === 429) {
+      reason = 'OpenAI quota limit reached. Check billing/usage, then retry.';
+    } else if (status === 401) {
+      reason = 'OpenAI API key is invalid or unauthorized.';
+    } else if (status === 403) {
+      reason = 'OpenAI access is forbidden for this key/project.';
+    }
+
     return {
       ...fallback,
-      reasons: [...fallback.reasons, `OpenAI call failed, using local rules fallback. (${error.message})`],
+      reasons: [...fallback.reasons, reason],
     };
   }
 };
