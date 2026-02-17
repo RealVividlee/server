@@ -190,6 +190,24 @@ button:hover {
   font-size: 1.75rem;
 }
 
+.page-links-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.page-links-grid article {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.page-links-grid a {
+  font-weight: 800;
+  color: var(--accent-dark);
+}
+
 .section-alt {
   background: var(--surface-soft);
   border-block: 1px solid var(--line);
@@ -535,7 +553,8 @@ button:hover {
   .hero-grid,
   .about-grid,
   .faq-grid,
-  .samples-grid {
+  .samples-grid,
+  .page-links-grid {
     grid-template-columns: 1fr;
   }
 }
