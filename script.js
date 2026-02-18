@@ -577,6 +577,55 @@ const handleFormUpdate = () => {
   renderLiveEstimate();
 };
 
+const submitConfirmedQuote = async (quote) => {
+  const response = await fetch('/api/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      quote: {
+        projectName: quote.projectName,
+        material: quote.material,
+        colorProfile: quote.colorProfile,
+        quantity: quote.quantity,
+        weight: quote.weight,
+        finish: quote.finish,
+        layerDetail: quote.layerDetail,
+        infillDensity: quote.infillDensity,
+        supportLevel: quote.supportLevel,
+        delivery: quote.delivery,
+        useCase: quote.useCase,
+        rush: quote.rush,
+        designHelp: quote.designHelp,
+        promoCode: quote.promoCode,
+        total: Number(quote.total.toFixed(2)),
+      },
+      mission: missionInput.value.trim(),
+      customerEmail: emailInput.value.trim(),
+    }),
+  });
+
+  if (!response.ok) {
+    let message = 'Could not confirm quote right now. Please try again.';
+
+    try {
+      const payload = await response.json();
+      if (payload?.error) {
+        message = `Could not confirm quote: ${payload.error}`;
+      }
+    } catch {
+      // ignore JSON parsing failures and keep generic message
+    }
+
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
+  }
+
+  return response.json();
+};
+
 form.addEventListener('input', handleFormUpdate);
 form.addEventListener('change', handleFormUpdate);
 clearDraftButton.addEventListener('click', clearDraft);
@@ -604,8 +653,8 @@ form.addEventListener('submit', async (event) => {
     persistDraft();
     estimateMeta.textContent = `Quote confirmed for ${quote.projectName}. Redirecting to order status...`;
     window.location.href = `order-status.html?orderId=${encodeURIComponent(currentOrderId)}`;
-  } catch {
-    estimateMeta.textContent = 'Could not confirm quote right now. Please try again.';
+  } catch (error) {
+    estimateMeta.textContent = error?.message || 'Could not confirm quote right now. Please try again.';
   }
 });
 
