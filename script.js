@@ -46,6 +46,7 @@ const rushMultiplier = 1.35;
 const designHelpFee = 12;
 const draftStorageKey = 'maple-layer-quote-draft-v1';
 const draftSaveDebounceMs = 250;
+const maxUploadBytes = 8 * 1024 * 1024;
 
 const form = document.getElementById('quote-form');
 const estimatePreview = document.getElementById('live-estimate-value');
@@ -584,6 +585,10 @@ const readModelFileAsPayload = () => {
     return Promise.resolve(undefined);
   }
 
+  if (file.size > maxUploadBytes) {
+    return Promise.reject(new Error('Uploaded file is too large. Keep files under 8 MB.'));
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -689,7 +694,13 @@ form.addEventListener('submit', async (event) => {
     estimateMeta.textContent = `Quote confirmed for ${quote.projectName}. Redirecting to order status...`;
     window.location.href = `order-status.html?orderId=${encodeURIComponent(currentOrderId)}`;
   } catch (error) {
-    estimateMeta.textContent = error?.message || 'Could not confirm quote right now. Please try again.';
+    const fallback = 'Could not confirm quote right now. Please try again.';
+    if (error?.message === 'Failed to fetch') {
+      estimateMeta.textContent = 'Network/server error while confirming quote. If uploading a file, try a smaller file and retry.';
+      return;
+    }
+
+    estimateMeta.textContent = error?.message || fallback;
   }
 });
 

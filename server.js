@@ -13,6 +13,7 @@ const dbPath = path.join(dataDir, 'orders.db');
 const openAiApiKey = process.env.OPENAI_API_KEY;
 const openAiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const reviewKey = process.env.REVIEW_KEY || 'local-review';
+const maxJsonBodyBytes = Number(process.env.MAX_JSON_BODY_BYTES || 12 * 1024 * 1024);
 
 fs.mkdirSync(dataDir, { recursive: true });
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -460,14 +461,25 @@ const server = http.createServer((req, res) => {
 
   if (requestUrl.pathname === '/api/orders' && req.method === 'POST') {
     let raw = '';
+    let tooLarge = false;
+
     req.on('data', (chunk) => {
+      if (tooLarge) {
+        return;
+      }
+
       raw += chunk;
-      if (raw.length > 1_000_000) {
-        req.destroy();
+      if (raw.length > maxJsonBodyBytes) {
+        tooLarge = true;
       }
     });
 
     req.on('end', () => {
+      if (tooLarge) {
+        sendJson(res, 413, { error: 'Payload too large. Reduce file size and try again.' });
+        return;
+      }
+
       let body;
       try {
         body = raw ? JSON.parse(raw) : {};
@@ -589,14 +601,25 @@ const server = http.createServer((req, res) => {
 
   if (requestUrl.pathname === '/api/mission-translate' && req.method === 'POST') {
     let raw = '';
+    let tooLarge = false;
+
     req.on('data', (chunk) => {
+      if (tooLarge) {
+        return;
+      }
+
       raw += chunk;
-      if (raw.length > 1_000_000) {
-        req.destroy();
+      if (raw.length > maxJsonBodyBytes) {
+        tooLarge = true;
       }
     });
 
     req.on('end', async () => {
+      if (tooLarge) {
+        sendJson(res, 413, { error: 'Payload too large.' });
+        return;
+      }
+
       let body;
       try {
         body = raw ? JSON.parse(raw) : {};
