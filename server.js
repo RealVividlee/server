@@ -73,7 +73,7 @@ const getOrderById = (id) => {
   }
 
   try {
-    return JSON.parse(row.payload_json);
+    return normalizeOrderShape(JSON.parse(row.payload_json));
   } catch {
     return undefined;
   }
@@ -84,12 +84,34 @@ const getAllOrders = () => {
   return rows
     .map((row) => {
       try {
-        return JSON.parse(row.payload_json);
+        return normalizeOrderShape(JSON.parse(row.payload_json));
       } catch {
         return undefined;
       }
     })
     .filter(Boolean);
+};
+
+
+const normalizeOrderShape = (order) => {
+  if (!order || typeof order !== 'object') {
+    return order;
+  }
+
+  if (!order.orderDetails && order.quote) {
+    order.orderDetails = order.quote;
+  }
+
+  if (order.quote) {
+    delete order.quote;
+  }
+
+  if (order.receipt?.quoteSnapshot && !order.receipt.orderSnapshot) {
+    order.receipt.orderSnapshot = order.receipt.quoteSnapshot;
+    delete order.receipt.quoteSnapshot;
+  }
+
+  return order;
 };
 
 
@@ -316,7 +338,7 @@ const getMissionPlan = async (mission) => {
   }
 };
 
-const createOrder = ({ quote, mission, customerEmail, uploadedFile }) => {
+const createOrder = ({ orderDetails, mission, customerEmail, uploadedFile }) => {
   const id = `ML-${String(nextOrderNumber).padStart(4, '0')}`;
   nextOrderNumber += 1;
 
@@ -324,10 +346,10 @@ const createOrder = ({ quote, mission, customerEmail, uploadedFile }) => {
   const order = {
     id,
     status: 'file_review',
-    note: 'Quote confirmed. File review has started and we will update you soon.',
+    note: 'Order confirmed. File review has started and we will update you soon.',
     createdAt: now,
     updatedAt: now,
-    quote,
+    orderDetails,
     mission,
     customerEmail,
     uploadedFile,
@@ -338,18 +360,18 @@ const createOrder = ({ quote, mission, customerEmail, uploadedFile }) => {
 };
 
 const buildReceiptFromOrder = (order) => {
-  const quote = order.quote || {};
-  const printCost = Number(quote.printCost || 0);
-  const rushFee = Number(quote.rushFee || 0);
-  const designReviewFee = Number(quote.designReviewFee || 0);
-  const setupFee = Number(quote.setupHelpFee || 0);
-  const shipping = Number(quote.shipping || 0);
-  const promoDiscount = Number(quote.discount || 0);
+  const orderDetails = order.orderDetails || order.quote || {};
+  const printCost = Number(orderDetails.printCost || 0);
+  const rushFee = Number(orderDetails.rushFee || 0);
+  const designReviewFee = Number(orderDetails.designReviewFee || 0);
+  const setupFee = Number(orderDetails.setupHelpFee || 0);
+  const shipping = Number(orderDetails.shipping || 0);
+  const promoDiscount = Number(orderDetails.discount || 0);
 
   const subtotal = printCost + rushFee + designReviewFee + setupFee + shipping - promoDiscount;
   const taxRate = 0;
   const tax = subtotal * taxRate;
-  const total = typeof quote.total === 'number' ? quote.total : subtotal + tax;
+  const total = typeof orderDetails.total === 'number' ? orderDetails.total : subtotal + tax;
 
   return {
     receiptId: `RCPT-${order.id}`,
@@ -368,23 +390,23 @@ const buildReceiptFromOrder = (order) => {
     tax,
     subtotal,
     total,
-    quoteSnapshot: {
-      projectName: quote.projectName,
-      material: quote.material,
-      colorProfile: quote.colorProfile,
-      quantity: quote.quantity,
-      weight: quote.weight,
-      finish: quote.finish,
-      layerDetail: quote.layerDetail,
-      infillDensity: quote.infillDensity,
-      supportLevel: quote.supportLevel,
-      delivery: quote.delivery,
-      useCase: quote.useCase,
-      rush: quote.rush,
-      designHelp: quote.designHelp,
-      promoCode: quote.promoCode,
-      leadTimeDays: quote.leadTimeDays,
-      fileText: quote.fileText,
+    orderSnapshot: {
+      projectName: orderDetails.projectName,
+      material: orderDetails.material,
+      colorProfile: orderDetails.colorProfile,
+      quantity: orderDetails.quantity,
+      weight: orderDetails.weight,
+      finish: orderDetails.finish,
+      layerDetail: orderDetails.layerDetail,
+      infillDensity: orderDetails.infillDensity,
+      supportLevel: orderDetails.supportLevel,
+      delivery: orderDetails.delivery,
+      useCase: orderDetails.useCase,
+      rush: orderDetails.rush,
+      designHelp: orderDetails.designHelp,
+      promoCode: orderDetails.promoCode,
+      leadTimeDays: orderDetails.leadTimeDays,
+      fileText: orderDetails.fileText,
       mission: order.mission || '',
     },
   };
@@ -395,7 +417,7 @@ const updateOrderStatus = (order, status, note) => {
   order.note = typeof note === 'string' && note.trim()
     ? note.trim()
     : status === 'fully_confirmed'
-      ? 'File review complete. Your quote is now fully confirmed.'
+      ? 'File review complete. Your order is now fully confirmed.'
       : status === 'canceled'
         ? 'Order canceled.'
         : 'File review in progress.';
@@ -488,8 +510,9 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      if (!body.quote || typeof body.quote !== 'object') {
-        sendJson(res, 400, { error: 'Field "quote" is required.' });
+      const incomingOrderDetails = body.order || body.quote;
+      if (!incomingOrderDetails || typeof incomingOrderDetails !== 'object') {
+        sendJson(res, 400, { error: 'Field "order" is required.' });
         return;
       }
 
@@ -499,7 +522,7 @@ const server = http.createServer((req, res) => {
       const uploadedFile = saveOrderUpload(tentativeOrderId, body.modelFile);
 
       const order = createOrder({
-        quote: body.quote,
+        orderDetails: incomingOrderDetails,
         mission,
         customerEmail,
         uploadedFile,

@@ -67,8 +67,8 @@ const renderSimpleOrder = (order) => {
   simpleId.textContent = order?.id || '—';
   simpleStatus.textContent = order?.status || '—';
   simpleEmail.textContent = order?.customerEmail || '—';
-  simpleProject.textContent = order?.quote?.projectName || '—';
-  simpleTotal.textContent = typeof order?.quote?.total === 'number' ? currency.format(order.quote.total) : '—';
+  simpleProject.textContent = order?.orderDetails?.projectName || '—';
+  simpleTotal.textContent = typeof order?.orderDetails?.total === 'number' ? currency.format(order.orderDetails.total) : '—';
   simpleMission.textContent = order?.mission || '—';
   simpleCreated.textContent = formatDate(order?.createdAt);
   simpleUpdated.textContent = formatDate(order?.updatedAt);
@@ -99,10 +99,10 @@ const renderAdminReceipt = (order) => {
     adminReceiptIssued.textContent = '—';
     adminReceiptOrder.textContent = order.id || '—';
     adminReceiptEmail.textContent = order.customerEmail || '—';
-    adminReceiptProject.textContent = order.quote?.projectName || '—';
-    adminReceiptMaterial.textContent = order.quote?.material || '—';
-    adminReceiptQuantity.textContent = String(order.quote?.quantity ?? '—');
-    adminReceiptTotal.textContent = typeof order.quote?.total === 'number' ? currency.format(order.quote.total) : '—';
+    adminReceiptProject.textContent = order.orderDetails?.projectName || '—';
+    adminReceiptMaterial.textContent = order.orderDetails?.material || '—';
+    adminReceiptQuantity.textContent = String(order.orderDetails?.quantity ?? '—');
+    adminReceiptTotal.textContent = typeof order.orderDetails?.total === 'number' ? currency.format(order.orderDetails.total) : '—';
     adminReceiptLines.innerHTML = '';
     return;
   }
@@ -112,9 +112,9 @@ const renderAdminReceipt = (order) => {
   adminReceiptIssued.textContent = formatDate(receipt.issuedAt);
   adminReceiptOrder.textContent = receipt.orderId || '—';
   adminReceiptEmail.textContent = receipt.customerEmail || '—';
-  adminReceiptProject.textContent = receipt.quoteSnapshot?.projectName || '—';
-  adminReceiptMaterial.textContent = receipt.quoteSnapshot?.material || '—';
-  adminReceiptQuantity.textContent = String(receipt.quoteSnapshot?.quantity ?? '—');
+  adminReceiptProject.textContent = receipt.orderSnapshot?.projectName || '—';
+  adminReceiptMaterial.textContent = receipt.orderSnapshot?.material || '—';
+  adminReceiptQuantity.textContent = String(receipt.orderSnapshot?.quantity ?? '—');
   adminReceiptTotal.textContent = typeof receipt.total === 'number' ? currency.format(receipt.total) : '—';
   adminReceiptLines.innerHTML = (receipt.lineItems || [])
     .map((item) => `<li><span>${item.label}</span><strong>${currency.format(Number(item.amount || 0))}</strong></li>`)
@@ -163,7 +163,7 @@ const renderOrdersList = (orders) => {
 
   ordersList.innerHTML = orders
     .map((order) => {
-      const projectName = order?.quote?.projectName || 'Untitled project';
+      const projectName = order?.orderDetails?.projectName || 'Untitled project';
       return `<li>
         <button type="button" class="order-list-item" data-order-id="${order.id}">
           <span><strong>${order.id}</strong> · ${projectName}</span>

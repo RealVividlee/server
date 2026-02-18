@@ -539,7 +539,7 @@ const applyTranslatedMission = () => {
     supportLevelInput.value = 'standard';
   }
 
-  missionResult.textContent = 'Translated plan applied to your quote form and customization settings.';
+  missionResult.textContent = 'Translated plan applied to your order form and customization settings.';
   handleFormUpdate();
 };
 
@@ -615,7 +615,7 @@ const submitConfirmedQuote = async (quote) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      quote: {
+      order: {
         projectName: quote.projectName,
         material: quote.material,
         colorProfile: quote.colorProfile,
@@ -647,12 +647,12 @@ const submitConfirmedQuote = async (quote) => {
   });
 
   if (!response.ok) {
-    let message = 'Could not confirm quote right now. Please try again.';
+    let message = 'Could not confirm order right now. Please try again.';
 
     try {
       const payload = await response.json();
       if (payload?.error) {
-        message = `Could not confirm quote: ${payload.error}`;
+        message = `Could not confirm order: ${payload.error}`;
       }
     } catch {
       // ignore JSON parsing failures and keep generic message
@@ -685,18 +685,18 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
-  estimateMeta.textContent = 'Confirming your quote...';
+  estimateMeta.textContent = 'Confirming your order...';
 
   try {
     const data = await submitConfirmedQuote(quote);
     currentOrderId = data.order.id;
     persistDraft();
-    estimateMeta.textContent = `Quote confirmed for ${quote.projectName}. Redirecting to order status...`;
+    estimateMeta.textContent = `Order confirmed for ${quote.projectName}. Redirecting to order status...`;
     window.location.href = `order-status.html?orderId=${encodeURIComponent(currentOrderId)}`;
   } catch (error) {
-    const fallback = 'Could not confirm quote right now. Please try again.';
+    const fallback = 'Could not confirm order right now. Please try again.';
     if (error?.message === 'Failed to fetch') {
-      estimateMeta.textContent = 'Network/server error while confirming quote. If uploading a file, try a smaller file and retry.';
+      estimateMeta.textContent = 'Network/server error while confirming order. If uploading a file, try a smaller file and retry.';
       return;
     }
 

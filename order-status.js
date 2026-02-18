@@ -42,9 +42,9 @@ const renderReceipt = (receipt) => {
   clientReceiptIssued.textContent = receipt.issuedAt ? new Date(receipt.issuedAt).toLocaleString() : '—';
   clientReceiptOrder.textContent = receipt.orderId || '—';
   clientReceiptEmail.textContent = receipt.customerEmail || '—';
-  clientReceiptProject.textContent = receipt.quoteSnapshot?.projectName || '—';
-  clientReceiptMaterial.textContent = receipt.quoteSnapshot?.material || '—';
-  clientReceiptQuantity.textContent = String(receipt.quoteSnapshot?.quantity ?? '—');
+  clientReceiptProject.textContent = receipt.orderSnapshot?.projectName || '—';
+  clientReceiptMaterial.textContent = receipt.orderSnapshot?.material || '—';
+  clientReceiptQuantity.textContent = String(receipt.orderSnapshot?.quantity ?? '—');
   clientReceiptTotal.textContent = typeof receipt.total === 'number' ? currency.format(receipt.total) : '—';
 
   clientReceiptLines.innerHTML = (receipt.lineItems || [])
@@ -66,17 +66,17 @@ const renderOrder = (order) => {
     clientReceiptIssued.textContent = '—';
     clientReceiptOrder.textContent = order.id;
     clientReceiptEmail.textContent = order.customerEmail || '—';
-    clientReceiptProject.textContent = order.quote?.projectName || '—';
-    clientReceiptMaterial.textContent = order.quote?.material || '—';
-    clientReceiptQuantity.textContent = String(order.quote?.quantity ?? '—');
-    clientReceiptTotal.textContent = typeof order.quote?.total === 'number' ? currency.format(order.quote.total) : '—';
+    clientReceiptProject.textContent = order.orderDetails?.projectName || '—';
+    clientReceiptMaterial.textContent = order.orderDetails?.material || '—';
+    clientReceiptQuantity.textContent = String(order.orderDetails?.quantity ?? '—');
+    clientReceiptTotal.textContent = typeof order.orderDetails?.total === 'number' ? currency.format(order.orderDetails.total) : '—';
     clientReceiptLines.innerHTML = '';
   }
 };
 
 const fetchOrder = async () => {
   if (!orderId) {
-    orderStatusNote.textContent = 'No order ID provided. Return to quote page and confirm a quote first.';
+    orderStatusNote.textContent = 'No order ID provided. Return to the order page and confirm an order first.';
     return;
   }
 
