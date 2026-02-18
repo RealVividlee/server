@@ -2,16 +2,27 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
+const { DatabaseSync } = require('node:sqlite');
 
 const host = '0.0.0.0';
 const port = Number(process.env.PORT || 4173);
 const rootDir = __dirname;
+const dataDir = path.join(rootDir, 'data');
+const dbPath = path.join(dataDir, 'orders.db');
 const openAiApiKey = process.env.OPENAI_API_KEY;
 const openAiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const reviewKey = process.env.REVIEW_KEY || 'local-review';
-const orders = new Map();
-let nextOrderNumber = 1;
 
+fs.mkdirSync(dataDir, { recursive: true });
+const db = new DatabaseSync(dbPath);
+db.exec(`
+  CREATE TABLE IF NOT EXISTS orders (
+    id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    payload_json TEXT NOT NULL
+  )
+`);
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -29,6 +40,54 @@ const allowedMaterials = new Set(['PLA', 'PETG', 'ABS', 'TPU']);
 const allowedFinishes = new Set(['standard', 'premium']);
 const allowedColorProfiles = new Set(['standard', 'matte', 'silk', 'translucent']);
 const allowedUseCases = new Set(['prototype', 'display', 'replacement', 'gift']);
+
+const getNextOrderNumber = () => {
+  const row = db.prepare("SELECT id FROM orders ORDER BY CAST(SUBSTR(id, 4) AS INTEGER) DESC LIMIT 1").get();
+  if (!row?.id) {
+    return 1;
+  }
+
+  const numeric = Number(String(row.id).replace('ML-', ''));
+  return Number.isFinite(numeric) ? numeric + 1 : 1;
+};
+
+let nextOrderNumber = getNextOrderNumber();
+
+const persistOrder = (order) => {
+  db.prepare(`
+    INSERT INTO orders (id, created_at, updated_at, payload_json)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      updated_at=excluded.updated_at,
+      payload_json=excluded.payload_json
+  `).run(order.id, order.createdAt, order.updatedAt, JSON.stringify(order));
+};
+
+const getOrderById = (id) => {
+  const row = db.prepare('SELECT payload_json FROM orders WHERE id = ?').get(id);
+  if (!row?.payload_json) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(row.payload_json);
+  } catch {
+    return undefined;
+  }
+};
+
+const getAllOrders = () => {
+  const rows = db.prepare('SELECT payload_json FROM orders ORDER BY created_at DESC').all();
+  return rows
+    .map((row) => {
+      try {
+        return JSON.parse(row.payload_json);
+      } catch {
+        return undefined;
+      }
+    })
+    .filter(Boolean);
+};
 
 const heuristicMissionPlan = (text) => {
   const normalized = String(text || '').toLowerCase();
@@ -208,7 +267,7 @@ const createOrder = ({ quote, mission, customerEmail }) => {
     customerEmail,
   };
 
-  orders.set(id, order);
+  persistOrder(order);
   return order;
 };
 
@@ -283,6 +342,8 @@ const updateOrderStatus = (order, status, note) => {
   if (status === 'canceled') {
     order.receipt = undefined;
   }
+
+  persistOrder(order);
 };
 
 const sendJson = (res, statusCode, body) => {
@@ -328,8 +389,7 @@ const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || `localhost:${port}`}`);
 
   if (requestUrl.pathname === '/api/orders' && req.method === 'GET') {
-    const allOrders = [...orders.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    sendJson(res, 200, { orders: allOrders });
+    sendJson(res, 200, { orders: getAllOrders() });
     return;
   }
 
@@ -370,7 +430,7 @@ const server = http.createServer((req, res) => {
 
   const orderMatch = requestUrl.pathname.match(/^\/api\/orders\/([A-Za-z0-9-]+)$/);
   if (orderMatch && req.method === 'GET') {
-    const order = orders.get(orderMatch[1]);
+    const order = getOrderById(orderMatch[1]);
     if (!order) {
       sendJson(res, 404, { error: 'Order not found.' });
       return;
@@ -388,7 +448,7 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    const order = orders.get(orderStatusMatch[1]);
+    const order = getOrderById(orderStatusMatch[1]);
     if (!order) {
       sendJson(res, 404, { error: 'Order not found.' });
       return;
@@ -470,4 +530,5 @@ server.listen(port, host, () => {
     ? `OpenAI integration enabled (model: ${openAiModel}).`
     : 'OpenAI integration disabled (set OPENAI_API_KEY to enable).');
   console.log(`Order review API ready (set REVIEW_KEY, current default: ${reviewKey}).`);
+  console.log(`Order storage ready at ${dbPath}.`);
 });
