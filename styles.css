@@ -1084,3 +1084,81 @@ button:hover {
     grid-template-columns: 1fr;
   }
 }
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.admin-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.admin-card h3 {
+  margin-top: 0;
+}
+
+.admin-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-light);
+}
+
+.admin-card input {
+  padding: 0.65rem;
+  border-radius: 9px;
+  border: 1px solid #37445f;
+  background: #111722;
+  color: var(--ink);
+}
+
+.admin-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.admin-actions button {
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+}
+
+.admin-actions .secondary-btn {
+  background: #2a3345;
+  color: var(--ink);
+  border: 1px solid #42506e;
+}
+
+.admin-actions .danger-btn {
+  background: #7a2b3a;
+}
+
+.admin-json {
+  margin: 0;
+  max-height: 420px;
+  overflow: auto;
+  padding: 0.8rem;
+  border-radius: 10px;
+  border: 1px solid #36435f;
+  background: #111722;
+  color: #c8d6ff;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 930px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}

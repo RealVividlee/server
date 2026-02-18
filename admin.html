@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Admin | Maple & Layer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html">Maple & Layer</a>
+        <nav aria-label="Primary">
+          <ul class="nav-list">
+            <li><a href="quote.html">Request a quote</a></li>
+            <li><a href="order-status.html">Order status</a></li>
+            <li><a href="admin.html">Admin</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="container">
+          <h2>Simple order admin</h2>
+          <p class="quote-intro">Load an order, then approve or cancel it. Keep your review key private.</p>
+
+          <div class="admin-grid">
+            <form id="admin-form" class="admin-card">
+              <label>
+                Order ID
+                <input type="text" id="orderId" placeholder="ML-0001" required />
+              </label>
+
+              <label>
+                Review key
+                <input type="password" id="reviewKey" placeholder="local-review" required />
+              </label>
+
+              <label>
+                Note (optional)
+                <input type="text" id="adminNote" placeholder="Approved after file review" />
+              </label>
+
+              <div class="admin-actions">
+                <button type="button" data-action="load">Load order</button>
+                <button type="button" class="secondary-btn" data-action="review">Set file review</button>
+                <button type="button" data-action="approve">Approve</button>
+                <button type="button" class="danger-btn" data-action="cancel">Cancel</button>
+              </div>
+
+              <p class="draft-status" id="admin-status" aria-live="polite">Ready.</p>
+            </form>
+
+            <article class="admin-card">
+              <h3>Current order</h3>
+              <pre id="admin-order-json" class="admin-json">Load an order to see details.</pre>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> Maple & Layer · Internal admin view.</p>
+      </div>
+    </footer>
+
+    <script src="admin.js"></script>
+  </body>
+</html>
