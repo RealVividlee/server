@@ -577,6 +577,32 @@ const handleFormUpdate = () => {
   renderLiveEstimate();
 };
 
+
+const readModelFileAsPayload = () => {
+  const file = modelFileInput.files[0];
+  if (!file) {
+    return Promise.resolve(undefined);
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      const base64 = result.includes(',') ? result.split(',')[1] : '';
+      resolve({
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        size: file.size,
+        base64,
+      });
+    };
+    reader.onerror = () => {
+      reject(new Error('Could not read uploaded file.'));
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 const submitConfirmedQuote = async (quote) => {
   const response = await fetch('/api/orders', {
     method: 'POST',
@@ -611,6 +637,7 @@ const submitConfirmedQuote = async (quote) => {
       },
       mission: missionInput.value.trim(),
       customerEmail: emailInput.value.trim(),
+      modelFile: await readModelFileAsPayload(),
     }),
   });
 

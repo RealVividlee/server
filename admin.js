@@ -8,6 +8,7 @@ const orderSimple = document.getElementById('admin-order-simple');
 const ordersList = document.getElementById('ordersList');
 const refreshOrdersButton = document.getElementById('refreshOrders');
 const toggleViewButton = document.getElementById('toggleView');
+const downloadOrderFileButton = document.getElementById('downloadOrderFile');
 const actionButtons = document.querySelectorAll('[data-action]');
 
 const simpleId = document.getElementById('simple-id');
@@ -19,6 +20,7 @@ const simpleMission = document.getElementById('simple-mission');
 const simpleCreated = document.getElementById('simple-created');
 const simpleUpdated = document.getElementById('simple-updated');
 const simpleNote = document.getElementById('simple-note');
+const simpleFile = document.getElementById('simple-file');
 
 const adminReceiptMeta = document.getElementById('adminReceiptMeta');
 const adminReceiptId = document.getElementById('adminReceiptId');
@@ -71,6 +73,7 @@ const renderSimpleOrder = (order) => {
   simpleCreated.textContent = formatDate(order?.createdAt);
   simpleUpdated.textContent = formatDate(order?.updatedAt);
   simpleNote.textContent = order?.note || '—';
+  simpleFile.textContent = order?.uploadedFile?.originalName || 'No upload';
 };
 
 const renderAdminReceipt = (order) => {
@@ -125,6 +128,7 @@ const renderSelectedOrder = () => {
     orderJson.hidden = false;
     toggleViewButton.disabled = true;
     toggleViewButton.textContent = 'Switch to simplified view';
+    simpleFile.textContent = '—';
     renderAdminReceipt(undefined);
     return;
   }
@@ -255,6 +259,54 @@ const updateOrderStatus = async (nextStatus) => {
   setStatus(`Updated ${orderId} to ${data.order.status}.`);
 };
 
+
+const downloadSelectedOrderFile = async () => {
+  const orderId = getOrderId();
+  const reviewKey = getReviewKey();
+
+  if (!orderId || !reviewKey) {
+    setStatus('Order ID and review key are required.');
+    return;
+  }
+
+  setStatus(`Downloading uploaded file for ${orderId}...`);
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}/file`, {
+    headers: {
+      'x-review-key': reviewKey,
+    },
+  });
+
+  if (!response.ok) {
+    let message = 'Could not download uploaded file.';
+    try {
+      const payload = await response.json();
+      if (payload?.error) {
+        message = payload.error;
+      }
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const contentDisposition = response.headers.get('content-disposition') || '';
+  const fallbackName = selectedOrder?.uploadedFile?.originalName || `${orderId}-upload.bin`;
+  const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+  const fileName = match?.[1] || fallbackName;
+
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+
+  setStatus(`Downloaded ${fileName}.`);
+};
+
 const handleAction = async (action) => {
   try {
     if (action === 'load') {
@@ -299,6 +351,14 @@ refreshOrdersButton.addEventListener('click', async () => {
 toggleViewButton.addEventListener('click', () => {
   showRawView = !showRawView;
   renderSelectedOrder();
+});
+
+downloadOrderFileButton.addEventListener('click', async () => {
+  try {
+    await downloadSelectedOrderFile();
+  } catch (error) {
+    setStatus(error?.message || 'Could not download uploaded file.');
+  }
 });
 
 renderSelectedOrder();

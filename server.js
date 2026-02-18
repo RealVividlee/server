@@ -8,12 +8,14 @@ const host = '0.0.0.0';
 const port = Number(process.env.PORT || 4173);
 const rootDir = __dirname;
 const dataDir = path.join(rootDir, 'data');
+const uploadsDir = path.join(dataDir, 'uploads');
 const dbPath = path.join(dataDir, 'orders.db');
 const openAiApiKey = process.env.OPENAI_API_KEY;
 const openAiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const reviewKey = process.env.REVIEW_KEY || 'local-review';
 
 fs.mkdirSync(dataDir, { recursive: true });
+fs.mkdirSync(uploadsDir, { recursive: true });
 const db = new DatabaseSync(dbPath);
 db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
@@ -87,6 +89,68 @@ const getAllOrders = () => {
       }
     })
     .filter(Boolean);
+};
+
+
+const toSafeBaseName = (value, fallback = 'upload.bin') => {
+  const cleaned = String(value || '').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120);
+  return cleaned || fallback;
+};
+
+const saveOrderUpload = (orderId, filePayload) => {
+  if (!filePayload || typeof filePayload !== 'object') {
+    return undefined;
+  }
+
+  const originalName = toSafeBaseName(filePayload.name, 'upload.bin');
+  const mimeType = typeof filePayload.type === 'string' && filePayload.type.trim()
+    ? filePayload.type.trim()
+    : 'application/octet-stream';
+  const base64 = typeof filePayload.base64 === 'string' ? filePayload.base64 : '';
+  if (!base64) {
+    return undefined;
+  }
+
+  let buffer;
+  try {
+    buffer = Buffer.from(base64, 'base64');
+  } catch {
+    return undefined;
+  }
+
+  if (!buffer.length) {
+    return undefined;
+  }
+
+  const expectedSize = Number(filePayload.size || buffer.length);
+  const storedFileName = `${orderId}-${Date.now()}-${originalName}`;
+  const absolutePath = path.join(uploadsDir, storedFileName);
+  fs.writeFileSync(absolutePath, buffer);
+
+  return {
+    originalName,
+    mimeType,
+    size: Number.isFinite(expectedSize) ? expectedSize : buffer.length,
+    storedFileName,
+  };
+};
+
+const readOrderUpload = (order) => {
+  const file = order?.uploadedFile;
+  if (!file?.storedFileName) {
+    return undefined;
+  }
+
+  const absolutePath = path.join(uploadsDir, file.storedFileName);
+  if (!fs.existsSync(absolutePath)) {
+    return undefined;
+  }
+
+  return {
+    absolutePath,
+    originalName: file.originalName || 'download.bin',
+    mimeType: file.mimeType || 'application/octet-stream',
+  };
 };
 
 const heuristicMissionPlan = (text) => {
@@ -251,7 +315,7 @@ const getMissionPlan = async (mission) => {
   }
 };
 
-const createOrder = ({ quote, mission, customerEmail }) => {
+const createOrder = ({ quote, mission, customerEmail, uploadedFile }) => {
   const id = `ML-${String(nextOrderNumber).padStart(4, '0')}`;
   nextOrderNumber += 1;
 
@@ -265,6 +329,7 @@ const createOrder = ({ quote, mission, customerEmail }) => {
     quote,
     mission,
     customerEmail,
+    uploadedFile,
   };
 
   persistOrder(order);
@@ -416,10 +481,16 @@ const server = http.createServer((req, res) => {
         return;
       }
 
+      const mission = typeof body.mission === 'string' ? body.mission.trim() : '';
+      const customerEmail = typeof body.customerEmail === 'string' ? body.customerEmail.trim() : '';
+      const tentativeOrderId = `ML-${String(nextOrderNumber).padStart(4, '0')}`;
+      const uploadedFile = saveOrderUpload(tentativeOrderId, body.modelFile);
+
       const order = createOrder({
         quote: body.quote,
-        mission: typeof body.mission === 'string' ? body.mission.trim() : '',
-        customerEmail: typeof body.customerEmail === 'string' ? body.customerEmail.trim() : '',
+        mission,
+        customerEmail,
+        uploadedFile,
       });
 
       sendJson(res, 201, { order });
@@ -481,6 +552,41 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+
+  const orderFileMatch = requestUrl.pathname.match(/^\/api\/orders\/([A-Za-z0-9-]+)\/file$/);
+  if (orderFileMatch && req.method === 'GET') {
+    const key = req.headers['x-review-key'];
+    if (key !== reviewKey) {
+      sendJson(res, 401, { error: 'Unauthorized.' });
+      return;
+    }
+
+    const order = getOrderById(orderFileMatch[1]);
+    if (!order) {
+      sendJson(res, 404, { error: 'Order not found.' });
+      return;
+    }
+
+    const file = readOrderUpload(order);
+    if (!file) {
+      sendJson(res, 404, { error: 'Uploaded file not found for this order.' });
+      return;
+    }
+
+    const stream = fs.createReadStream(file.absolutePath);
+    const escapedName = encodeURIComponent(file.originalName).replace(/%20/g, '_');
+    res.writeHead(200, {
+      'Content-Type': file.mimeType,
+      'Content-Disposition': `attachment; filename="${escapedName}"`,
+    });
+    stream.pipe(res);
+    stream.on('error', () => {
+      res.writeHead(500);
+      res.end('File download failed.');
+    });
+    return;
+  }
+
   if (requestUrl.pathname === '/api/mission-translate' && req.method === 'POST') {
     let raw = '';
     req.on('data', (chunk) => {
@@ -531,4 +637,5 @@ server.listen(port, host, () => {
     : 'OpenAI integration disabled (set OPENAI_API_KEY to enable).');
   console.log(`Order review API ready (set REVIEW_KEY, current default: ${reviewKey}).`);
   console.log(`Order storage ready at ${dbPath}.`);
+  console.log(`Upload storage ready at ${uploadsDir}.`);
 });
