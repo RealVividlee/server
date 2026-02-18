@@ -266,6 +266,12 @@ const serveStatic = (res, pathname) => {
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || `localhost:${port}`}`);
 
+  if (requestUrl.pathname === '/api/orders' && req.method === 'GET') {
+    const allOrders = [...orders.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    sendJson(res, 200, { orders: allOrders });
+    return;
+  }
+
   if (requestUrl.pathname === '/api/orders' && req.method === 'POST') {
     let raw = '';
     req.on('data', (chunk) => {

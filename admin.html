@@ -24,9 +24,19 @@
       <section class="section">
         <div class="container">
           <h2>Simple order admin</h2>
-          <p class="quote-intro">Load an order, then approve or cancel it. Keep your review key private.</p>
+          <p class="quote-intro">See all orders, select one, then approve or cancel it.</p>
 
           <div class="admin-grid">
+            <article class="admin-card">
+              <div class="admin-orders-header">
+                <h3>All orders</h3>
+                <button type="button" id="refreshOrders" class="secondary-btn">Refresh list</button>
+              </div>
+              <ul id="ordersList" class="orders-list">
+                <li class="orders-list-empty">No orders yet.</li>
+              </ul>
+            </article>
+
             <form id="admin-form" class="admin-card">
               <label>
                 Order ID
@@ -52,12 +62,26 @@
 
               <p class="draft-status" id="admin-status" aria-live="polite">Ready.</p>
             </form>
-
-            <article class="admin-card">
-              <h3>Current order</h3>
-              <pre id="admin-order-json" class="admin-json">Load an order to see details.</pre>
-            </article>
           </div>
+
+          <article class="admin-card admin-details-card">
+            <div class="admin-orders-header">
+              <h3>Selected order details</h3>
+              <button type="button" id="toggleView" class="secondary-btn">Switch to simplified view</button>
+            </div>
+            <pre id="admin-order-json" class="admin-json">Select or load an order to see details.</pre>
+            <div id="admin-order-simple" class="admin-simple" hidden>
+              <p><strong>Order:</strong> <span id="simple-id">—</span></p>
+              <p><strong>Status:</strong> <span id="simple-status">—</span></p>
+              <p><strong>Customer email:</strong> <span id="simple-email">—</span></p>
+              <p><strong>Project:</strong> <span id="simple-project">—</span></p>
+              <p><strong>Total:</strong> <span id="simple-total">—</span></p>
+              <p><strong>Mission:</strong> <span id="simple-mission">—</span></p>
+              <p><strong>Created:</strong> <span id="simple-created">—</span></p>
+              <p><strong>Updated:</strong> <span id="simple-updated">—</span></p>
+              <p><strong>Note:</strong> <span id="simple-note">—</span></p>
+            </div>
+          </article>
         </div>
       </section>
     </main>
