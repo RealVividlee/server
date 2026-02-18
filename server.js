@@ -212,6 +212,59 @@ const createOrder = ({ quote, mission, customerEmail }) => {
   return order;
 };
 
+const buildReceiptFromOrder = (order) => {
+  const quote = order.quote || {};
+  const printCost = Number(quote.printCost || 0);
+  const rushFee = Number(quote.rushFee || 0);
+  const designReviewFee = Number(quote.designReviewFee || 0);
+  const setupFee = Number(quote.setupHelpFee || 0);
+  const shipping = Number(quote.shipping || 0);
+  const promoDiscount = Number(quote.discount || 0);
+
+  const subtotal = printCost + rushFee + designReviewFee + setupFee + shipping - promoDiscount;
+  const taxRate = 0;
+  const tax = subtotal * taxRate;
+  const total = typeof quote.total === 'number' ? quote.total : subtotal + tax;
+
+  return {
+    receiptId: `RCPT-${order.id}`,
+    issuedAt: new Date().toISOString(),
+    orderId: order.id,
+    customerEmail: order.customerEmail || 'not_provided',
+    lineItems: [
+      { label: 'Print cost', amount: printCost },
+      { label: 'Rush fee', amount: rushFee },
+      { label: 'Design review', amount: designReviewFee },
+      { label: 'Setup fee', amount: setupFee },
+      { label: 'Shipping', amount: shipping },
+      { label: 'Promo discount', amount: -promoDiscount },
+    ],
+    taxRate,
+    tax,
+    subtotal,
+    total,
+    quoteSnapshot: {
+      projectName: quote.projectName,
+      material: quote.material,
+      colorProfile: quote.colorProfile,
+      quantity: quote.quantity,
+      weight: quote.weight,
+      finish: quote.finish,
+      layerDetail: quote.layerDetail,
+      infillDensity: quote.infillDensity,
+      supportLevel: quote.supportLevel,
+      delivery: quote.delivery,
+      useCase: quote.useCase,
+      rush: quote.rush,
+      designHelp: quote.designHelp,
+      promoCode: quote.promoCode,
+      leadTimeDays: quote.leadTimeDays,
+      fileText: quote.fileText,
+      mission: order.mission || '',
+    },
+  };
+};
+
 const updateOrderStatus = (order, status, note) => {
   order.status = status;
   order.note = typeof note === 'string' && note.trim()
@@ -222,6 +275,14 @@ const updateOrderStatus = (order, status, note) => {
         ? 'Order canceled.'
         : 'File review in progress.';
   order.updatedAt = new Date().toISOString();
+
+  if (status === 'fully_confirmed') {
+    order.receipt = buildReceiptFromOrder(order);
+  }
+
+  if (status === 'canceled') {
+    order.receipt = undefined;
+  }
 };
 
 const sendJson = (res, statusCode, body) => {

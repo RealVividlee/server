@@ -20,6 +20,17 @@ const simpleCreated = document.getElementById('simple-created');
 const simpleUpdated = document.getElementById('simple-updated');
 const simpleNote = document.getElementById('simple-note');
 
+const adminReceiptMeta = document.getElementById('adminReceiptMeta');
+const adminReceiptId = document.getElementById('adminReceiptId');
+const adminReceiptIssued = document.getElementById('adminReceiptIssued');
+const adminReceiptOrder = document.getElementById('adminReceiptOrder');
+const adminReceiptEmail = document.getElementById('adminReceiptEmail');
+const adminReceiptProject = document.getElementById('adminReceiptProject');
+const adminReceiptMaterial = document.getElementById('adminReceiptMaterial');
+const adminReceiptQuantity = document.getElementById('adminReceiptQuantity');
+const adminReceiptTotal = document.getElementById('adminReceiptTotal');
+const adminReceiptLines = document.getElementById('adminReceiptLines');
+
 year.textContent = String(new Date().getFullYear());
 
 const currency = new Intl.NumberFormat('en-US', {
@@ -62,6 +73,51 @@ const renderSimpleOrder = (order) => {
   simpleNote.textContent = order?.note || '—';
 };
 
+const renderAdminReceipt = (order) => {
+  const receipt = order?.receipt;
+
+  if (!order) {
+    adminReceiptMeta.textContent = 'Receipt will appear once an order is fully confirmed.';
+    adminReceiptId.textContent = '—';
+    adminReceiptIssued.textContent = '—';
+    adminReceiptOrder.textContent = '—';
+    adminReceiptEmail.textContent = '—';
+    adminReceiptProject.textContent = '—';
+    adminReceiptMaterial.textContent = '—';
+    adminReceiptQuantity.textContent = '—';
+    adminReceiptTotal.textContent = '—';
+    adminReceiptLines.innerHTML = '';
+    return;
+  }
+
+  if (!receipt) {
+    adminReceiptMeta.textContent = 'Receipt not generated yet. Approve this order to create a receipt.';
+    adminReceiptId.textContent = 'Pending approval';
+    adminReceiptIssued.textContent = '—';
+    adminReceiptOrder.textContent = order.id || '—';
+    adminReceiptEmail.textContent = order.customerEmail || '—';
+    adminReceiptProject.textContent = order.quote?.projectName || '—';
+    adminReceiptMaterial.textContent = order.quote?.material || '—';
+    adminReceiptQuantity.textContent = String(order.quote?.quantity ?? '—');
+    adminReceiptTotal.textContent = typeof order.quote?.total === 'number' ? currency.format(order.quote.total) : '—';
+    adminReceiptLines.innerHTML = '';
+    return;
+  }
+
+  adminReceiptMeta.textContent = 'Generated receipt for an approved order.';
+  adminReceiptId.textContent = receipt.receiptId || '—';
+  adminReceiptIssued.textContent = formatDate(receipt.issuedAt);
+  adminReceiptOrder.textContent = receipt.orderId || '—';
+  adminReceiptEmail.textContent = receipt.customerEmail || '—';
+  adminReceiptProject.textContent = receipt.quoteSnapshot?.projectName || '—';
+  adminReceiptMaterial.textContent = receipt.quoteSnapshot?.material || '—';
+  adminReceiptQuantity.textContent = String(receipt.quoteSnapshot?.quantity ?? '—');
+  adminReceiptTotal.textContent = typeof receipt.total === 'number' ? currency.format(receipt.total) : '—';
+  adminReceiptLines.innerHTML = (receipt.lineItems || [])
+    .map((item) => `<li><span>${item.label}</span><strong>${currency.format(Number(item.amount || 0))}</strong></li>`)
+    .join('');
+};
+
 const renderSelectedOrder = () => {
   if (!selectedOrder) {
     orderJson.textContent = 'Select or load an order to see details.';
@@ -69,11 +125,13 @@ const renderSelectedOrder = () => {
     orderJson.hidden = false;
     toggleViewButton.disabled = true;
     toggleViewButton.textContent = 'Switch to simplified view';
+    renderAdminReceipt(undefined);
     return;
   }
 
   orderJson.textContent = JSON.stringify(selectedOrder, null, 2);
   renderSimpleOrder(selectedOrder);
+  renderAdminReceipt(selectedOrder);
   toggleViewButton.disabled = false;
 
   if (showRawView) {
@@ -113,8 +171,7 @@ const renderOrdersList = (orders) => {
 
   ordersList.querySelectorAll('.order-list-item').forEach((button) => {
     button.addEventListener('click', () => {
-      const orderId = button.dataset.orderId;
-      const order = orders.find((item) => item.id === orderId);
+      const order = orders.find((item) => item.id === button.dataset.orderId);
       if (order) {
         selectOrder(order);
         setStatus(`Selected ${order.id}.`);
