@@ -48,7 +48,6 @@ const draftStorageKey = 'maple-layer-quote-draft-v1';
 const draftSaveDebounceMs = 250;
 
 const form = document.getElementById('quote-form');
-const nextSteps = document.getElementById('quote-next-steps');
 const estimatePreview = document.getElementById('live-estimate-value');
 const estimateTimeline = document.getElementById('live-estimate-time');
 const estimateMeta = document.getElementById('live-estimate-meta');
@@ -61,11 +60,6 @@ const missionSource = document.getElementById('missionSource');
 const translateMissionButton = document.getElementById('translateMission');
 const applyMissionOptionButton = document.getElementById('applyMissionOption');
 const draftStatus = document.getElementById('draft-status');
-const orderStatusCard = document.getElementById('orderStatusCard');
-const orderIdValue = document.getElementById('orderIdValue');
-const orderStageValue = document.getElementById('orderStageValue');
-const orderStatusNote = document.getElementById('orderStatusNote');
-const refreshOrderStatusButton = document.getElementById('refreshOrderStatus');
 const promoStatus = document.getElementById('promo-status');
 const clearDraftButton = document.getElementById('clearDraft');
 const rushCheckbox = document.getElementById('rush');
@@ -318,10 +312,8 @@ const clearDraft = () => {
   updateMissionModeLabel();
   translatedMissionPlan = undefined;
   currentOrderId = undefined;
-  orderStatusCard.hidden = true;
 
   setDraftStatus('Saved draft cleared.');
-  nextSteps.hidden = true;
   renderLiveEstimate();
 };
 
@@ -522,55 +514,6 @@ const translateMission = async () => {
   missionResult.innerHTML = `<strong>Recommended plan:</strong> ${plan.material}, ${plan.finish} finish, ${plan.colorProfile} color profile.${plan.rush ? ' Rush enabled.' : ''}${plan.designHelp ? ' Design review enabled.' : ''}<br>${plan.reasons.join(' ') || 'Using balanced defaults based on your note.'}`;
 };
 
-const orderStageLabel = {
-  file_review: 'File review in progress',
-  fully_confirmed: 'Fully confirmed',
-  canceled: 'Canceled',
-};
-
-const renderOrderStatus = (order) => {
-  orderStatusCard.hidden = false;
-  orderIdValue.textContent = order.id;
-  orderStageValue.textContent = orderStageLabel[order.status] ?? order.status;
-  orderStatusNote.textContent = order.note || 'Your quote is confirmed and waiting for file review.';
-};
-
-const submitConfirmedQuote = async (quote) => {
-  const response = await fetch('/api/orders', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      quote,
-      mission: missionInput.value.trim(),
-      customerEmail: emailInput.value.trim(),
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Could not create quote order.');
-  }
-
-  return response.json();
-};
-
-const refreshOrderStatus = async () => {
-  if (!currentOrderId) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`/api/orders/${encodeURIComponent(currentOrderId)}`);
-    if (!response.ok) {
-      throw new Error('Order status unavailable');
-    }
-
-    const data = await response.json();
-    renderOrderStatus(data.order);
-  } catch {
-    orderStatusNote.textContent = 'Could not refresh order status right now.';
-  }
-};
-
 const applyTranslatedMission = () => {
   if (!translatedMissionPlan) {
     missionResult.textContent = 'Translate a mission first, then apply it.';
@@ -643,7 +586,6 @@ missionMode.addEventListener('change', () => {
   persistDraft();
 });
 applyMissionOptionButton.addEventListener('click', applyTranslatedMission);
-refreshOrderStatusButton.addEventListener('click', refreshOrderStatus);
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -651,7 +593,6 @@ form.addEventListener('submit', async (event) => {
 
   if (!quote.isValid) {
     estimateMeta.textContent = quote.message;
-    nextSteps.hidden = true;
     return;
   }
 
@@ -660,14 +601,11 @@ form.addEventListener('submit', async (event) => {
   try {
     const data = await submitConfirmedQuote(quote);
     currentOrderId = data.order.id;
-    renderOrderStatus(data.order);
     persistDraft();
-    estimateMeta.textContent = `Quote confirmed for ${quote.projectName}. ${quote.fileText}`;
-    nextSteps.hidden = false;
-    nextSteps.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    estimateMeta.textContent = `Quote confirmed for ${quote.projectName}. Redirecting to order status...`;
+    window.location.href = `order-status.html?orderId=${encodeURIComponent(currentOrderId)}`;
   } catch {
     estimateMeta.textContent = 'Could not confirm quote right now. Please try again.';
-    nextSteps.hidden = true;
   }
 });
 
@@ -675,6 +613,3 @@ loadDraft();
 updateMissionModeLabel();
 resetOptionCards();
 renderLiveEstimate();
-if (currentOrderId) {
-  refreshOrderStatus();
-}
