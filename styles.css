@@ -253,6 +253,30 @@ button:hover {
   color: var(--ink-light);
   font-weight: 600;
 }
+
+.order-status-card {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px solid #42506e;
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.order-status-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.order-status-card p {
+  margin: 0.3rem 0;
+  color: var(--ink-light);
+}
+
+.order-status-card .form-actions {
+  margin-top: 0.7rem;
+}
+
 .quote-next-steps {
   background: var(--surface);
   border: 1px solid var(--line);

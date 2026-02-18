@@ -8,6 +8,10 @@ const port = Number(process.env.PORT || 4173);
 const rootDir = __dirname;
 const openAiApiKey = process.env.OPENAI_API_KEY;
 const openAiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+const reviewKey = process.env.REVIEW_KEY || 'local-review';
+const orders = new Map();
+let nextOrderNumber = 1;
+
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -188,6 +192,38 @@ const getMissionPlan = async (mission) => {
   }
 };
 
+const createOrder = ({ quote, mission, customerEmail }) => {
+  const id = `ML-${String(nextOrderNumber).padStart(4, '0')}`;
+  nextOrderNumber += 1;
+
+  const now = new Date().toISOString();
+  const order = {
+    id,
+    status: 'file_review',
+    note: 'Quote confirmed. File review has started and we will update you soon.',
+    createdAt: now,
+    updatedAt: now,
+    quote,
+    mission,
+    customerEmail,
+  };
+
+  orders.set(id, order);
+  return order;
+};
+
+const updateOrderStatus = (order, status, note) => {
+  order.status = status;
+  order.note = typeof note === 'string' && note.trim()
+    ? note.trim()
+    : status === 'fully_confirmed'
+      ? 'File review complete. Your quote is now fully confirmed.'
+      : status === 'canceled'
+        ? 'Order canceled.'
+        : 'File review in progress.';
+  order.updatedAt = new Date().toISOString();
+};
+
 const sendJson = (res, statusCode, body) => {
   const payload = JSON.stringify(body);
   res.writeHead(statusCode, {
@@ -229,6 +265,94 @@ const serveStatic = (res, pathname) => {
 
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || `localhost:${port}`}`);
+
+  if (requestUrl.pathname === '/api/orders' && req.method === 'POST') {
+    let raw = '';
+    req.on('data', (chunk) => {
+      raw += chunk;
+      if (raw.length > 1_000_000) {
+        req.destroy();
+      }
+    });
+
+    req.on('end', () => {
+      let body;
+      try {
+        body = raw ? JSON.parse(raw) : {};
+      } catch {
+        sendJson(res, 400, { error: 'Invalid JSON payload.' });
+        return;
+      }
+
+      if (!body.quote || typeof body.quote !== 'object') {
+        sendJson(res, 400, { error: 'Field "quote" is required.' });
+        return;
+      }
+
+      const order = createOrder({
+        quote: body.quote,
+        mission: typeof body.mission === 'string' ? body.mission.trim() : '',
+        customerEmail: typeof body.customerEmail === 'string' ? body.customerEmail.trim() : '',
+      });
+
+      sendJson(res, 201, { order });
+    });
+
+    return;
+  }
+
+  const orderMatch = requestUrl.pathname.match(/^\/api\/orders\/([A-Za-z0-9-]+)$/);
+  if (orderMatch && req.method === 'GET') {
+    const order = orders.get(orderMatch[1]);
+    if (!order) {
+      sendJson(res, 404, { error: 'Order not found.' });
+      return;
+    }
+
+    sendJson(res, 200, { order });
+    return;
+  }
+
+  const orderStatusMatch = requestUrl.pathname.match(/^\/api\/orders\/([A-Za-z0-9-]+)\/status$/);
+  if (orderStatusMatch && req.method === 'PATCH') {
+    const key = req.headers['x-review-key'];
+    if (key !== reviewKey) {
+      sendJson(res, 401, { error: 'Unauthorized.' });
+      return;
+    }
+
+    const order = orders.get(orderStatusMatch[1]);
+    if (!order) {
+      sendJson(res, 404, { error: 'Order not found.' });
+      return;
+    }
+
+    let raw = '';
+    req.on('data', (chunk) => {
+      raw += chunk;
+    });
+
+    req.on('end', () => {
+      let body;
+      try {
+        body = raw ? JSON.parse(raw) : {};
+      } catch {
+        sendJson(res, 400, { error: 'Invalid JSON payload.' });
+        return;
+      }
+
+      const allowed = new Set(['file_review', 'fully_confirmed', 'canceled']);
+      if (!allowed.has(body.status)) {
+        sendJson(res, 400, { error: 'Invalid status.' });
+        return;
+      }
+
+      updateOrderStatus(order, body.status, body.note);
+      sendJson(res, 200, { order });
+    });
+
+    return;
+  }
 
   if (requestUrl.pathname === '/api/mission-translate' && req.method === 'POST') {
     let raw = '';
@@ -278,4 +402,5 @@ server.listen(port, host, () => {
   console.log(openAiApiKey
     ? `OpenAI integration enabled (model: ${openAiModel}).`
     : 'OpenAI integration disabled (set OPENAI_API_KEY to enable).');
+  console.log(`Order review API ready (set REVIEW_KEY, current default: ${reviewKey}).`);
 });
