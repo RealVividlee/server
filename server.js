@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 const { DatabaseSync } = require('node:sqlite');
+const crypto = require('crypto');
 
 const host = '0.0.0.0';
 const port = Number(process.env.PORT || 4173);
@@ -14,6 +15,8 @@ const openAiApiKey = process.env.OPENAI_API_KEY;
 const openAiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const reviewKey = process.env.REVIEW_KEY || 'local-review';
 const maxJsonBodyBytes = Number(process.env.MAX_JSON_BODY_BYTES || 12 * 1024 * 1024);
+const adminUsername = process.env.ADMIN_USERNAME || '';
+const adminPassword = process.env.ADMIN_PASSWORD || '';
 
 fs.mkdirSync(dataDir, { recursive: true });
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -434,6 +437,63 @@ const updateOrderStatus = (order, status, note) => {
   persistOrder(order);
 };
 
+
+const safeEqual = (left, right) => {
+  const leftBuffer = Buffer.from(String(left || ''));
+  const rightBuffer = Buffer.from(String(right || ''));
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+};
+
+const isAdminAuthorized = (req) => {
+  if (!adminUsername || !adminPassword) {
+    return false;
+  }
+
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith('Basic ')) {
+    return false;
+  }
+
+  let decoded;
+  try {
+    decoded = Buffer.from(header.slice(6), 'base64').toString('utf8');
+  } catch {
+    return false;
+  }
+
+  const separator = decoded.indexOf(':');
+  if (separator < 0) {
+    return false;
+  }
+
+  const username = decoded.slice(0, separator);
+  const password = decoded.slice(separator + 1);
+
+  return safeEqual(username, adminUsername) && safeEqual(password, adminPassword);
+};
+
+const requireAdminAccess = (req, res) => {
+  if (!adminUsername || !adminPassword) {
+    res.writeHead(404);
+    res.end('Not found');
+    return false;
+  }
+
+  if (!isAdminAuthorized(req)) {
+    res.writeHead(401, {
+      'WWW-Authenticate': 'Basic realm="LeeLayer Admin", charset="UTF-8"',
+    });
+    res.end('Unauthorized');
+    return false;
+  }
+
+  return true;
+};
+
 const sendJson = (res, statusCode, body) => {
   const payload = JSON.stringify(body);
   res.writeHead(statusCode, {
@@ -476,7 +536,24 @@ const serveStatic = (res, pathname) => {
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || `localhost:${port}`}`);
 
+  const adminPaths = new Set(['/admin', '/admin.html', '/admin.js']);
+  if (adminPaths.has(requestUrl.pathname)) {
+    if (!requireAdminAccess(req, res)) {
+      return;
+    }
+
+    const target = requestUrl.pathname === '/admin' ? '/admin.html' : requestUrl.pathname;
+    serveStatic(res, target);
+    return;
+  }
+
   if (requestUrl.pathname === '/api/orders' && req.method === 'GET') {
+    const key = req.headers['x-review-key'];
+    if (key !== reviewKey) {
+      sendJson(res, 401, { error: 'Unauthorized.' });
+      return;
+    }
+
     sendJson(res, 200, { orders: getAllOrders() });
     return;
   }
@@ -684,4 +761,7 @@ server.listen(port, host, () => {
   console.log(`Order review API ready (set REVIEW_KEY, current default: ${reviewKey}).`);
   console.log(`Order storage ready at ${dbPath}.`);
   console.log(`Upload storage ready at ${uploadsDir}.`);
+  console.log(adminUsername && adminPassword
+    ? 'Admin page protection enabled (HTTP Basic auth).'
+    : 'Admin page disabled until ADMIN_USERNAME and ADMIN_PASSWORD are set.');
 });

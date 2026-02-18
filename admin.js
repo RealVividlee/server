@@ -185,7 +185,16 @@ const renderOrdersList = (orders) => {
 };
 
 const loadAllOrders = async () => {
-  const response = await fetch('/api/orders');
+  const reviewKey = getReviewKey();
+  if (!reviewKey) {
+    throw new Error('Enter your review key to load orders.');
+  }
+
+  const response = await fetch('/api/orders', {
+    headers: {
+      'x-review-key': reviewKey,
+    },
+  });
   const data = await response.json();
 
   if (!response.ok) {
