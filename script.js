@@ -692,7 +692,9 @@ form.addEventListener('submit', async (event) => {
     currentOrderId = data.order.id;
     persistDraft();
     estimateMeta.textContent = `Order confirmed for ${quote.projectName}. Redirecting to order status...`;
-    window.location.href = `order-status.html?orderId=${encodeURIComponent(currentOrderId)}`;
+    const accessToken = typeof data.accessToken === 'string' ? data.accessToken : '';
+    const tokenParam = accessToken ? `&token=${encodeURIComponent(accessToken)}` : '';
+    window.location.href = `order-status.html?orderId=${encodeURIComponent(currentOrderId)}${tokenParam}`;
   } catch (error) {
     const fallback = 'Could not confirm order right now. Please try again.';
     if (error?.message === 'Failed to fetch') {

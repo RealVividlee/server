@@ -15,8 +15,19 @@ const openAiApiKey = process.env.OPENAI_API_KEY;
 const openAiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const reviewKey = process.env.REVIEW_KEY || 'local-review';
 const maxJsonBodyBytes = Number(process.env.MAX_JSON_BODY_BYTES || 12 * 1024 * 1024);
+const maxUploadBytes = Number(process.env.MAX_UPLOAD_BYTES || 8 * 1024 * 1024);
 const adminUsername = process.env.ADMIN_USERNAME || '';
 const adminPassword = process.env.ADMIN_PASSWORD || '';
+const orderTokenSecret = process.env.ORDER_TOKEN_SECRET || '';
+const isProduction = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+
+if (isProduction && reviewKey === 'local-review') {
+  throw new Error('REVIEW_KEY must be set to a strong value in production.');
+}
+
+if (isProduction && !orderTokenSecret) {
+  throw new Error('ORDER_TOKEN_SECRET must be set in production.');
+}
 
 fs.mkdirSync(dataDir, { recursive: true });
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -47,18 +58,191 @@ const allowedFinishes = new Set(['standard', 'premium']);
 const allowedColorProfiles = new Set(['standard', 'matte', 'silk', 'translucent']);
 const allowedUseCases = new Set(['prototype', 'display', 'replacement', 'gift']);
 
-const getNextOrderNumber = () => {
-  const row = db.prepare("SELECT id FROM orders ORDER BY CAST(SUBSTR(id, 4) AS INTEGER) DESC LIMIT 1").get();
-  if (!row?.id) {
-    return 1;
-  }
 
-  const numeric = Number(String(row.id).replace('ML-', ''));
-  return Number.isFinite(numeric) ? numeric + 1 : 1;
+const materialRatePerGram = {
+  PLA: 0.09,
+  PETG: 0.13,
+  ABS: 0.15,
+  TPU: 0.18,
 };
 
-let nextOrderNumber = getNextOrderNumber();
+const finishMultiplier = {
+  standard: 1,
+  premium: 1.2,
+};
 
+const colorMultiplier = {
+  standard: 1,
+  matte: 1.06,
+  silk: 1.12,
+  translucent: 1.16,
+};
+
+const layerDetailMultiplier = {
+  draft: 0.92,
+  balanced: 1,
+  fine: 1.16,
+};
+
+const infillMultiplier = {
+  light: 0.94,
+  standard: 1,
+  strong: 1.12,
+  max: 1.24,
+};
+
+const supportLevelMultiplier = {
+  minimal: 0.96,
+  standard: 1,
+  complex: 1.14,
+};
+
+const promoCodes = {
+  WELCOME10: 0.1,
+  MAKER5: 0.05,
+};
+
+const rushMultiplier = 1.35;
+const designHelpFee = 12;
+const allowedUploadMimeTypes = new Set([
+  'application/sla',
+  'model/stl',
+  'application/vnd.ms-pki.stl',
+  'application/vnd.ms-package.3dmanufacturing-3dmodel+xml',
+  'application/octet-stream',
+]);
+const allowedUploadExtensions = new Set(['.stl', '.3mf', '.obj']);
+const orderTokenSecretRuntime = orderTokenSecret || crypto.randomBytes(32).toString('hex');
+
+const createOrderId = () => `ML-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+const createAccessToken = () => crypto.randomBytes(24).toString('base64url');
+const hashAccessToken = (token) => crypto.createHash('sha256').update(`${orderTokenSecretRuntime}:${String(token || '')}`).digest('hex');
+
+const getClientIp = (req) => {
+  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  return forwarded || req.socket.remoteAddress || 'unknown';
+};
+
+const rateLimits = new Map();
+const checkRateLimit = (req, bucket, { limit, windowMs }) => {
+  const ip = getClientIp(req);
+  const key = `${bucket}:${ip}`;
+  const now = Date.now();
+  const current = rateLimits.get(key);
+  if (!current || current.resetAt <= now) {
+    rateLimits.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+
+  if (current.count >= limit) {
+    return false;
+  }
+
+  current.count += 1;
+  return true;
+};
+
+const buildSecurityHeaders = (req, contentType = '') => {
+  const headers = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'no-referrer',
+    'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+    'Cross-Origin-Resource-Policy': 'same-origin',
+  };
+
+  if (contentType.includes('text/html')) {
+    headers['Content-Security-Policy'] = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
+  }
+
+  const proto = String(req.headers['x-forwarded-proto'] || '');
+  if (proto === 'https') {
+    headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload';
+  }
+
+  return headers;
+};
+
+const safeParsePositiveNumber = (value, fallback = 0) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : fallback;
+};
+
+const computeServerQuote = (input) => {
+  const material = allowedMaterials.has(input?.material) ? input.material : 'PLA';
+  const finish = allowedFinishes.has(input?.finish) ? input.finish : 'standard';
+  const colorProfile = allowedColorProfiles.has(input?.colorProfile) ? input.colorProfile : 'standard';
+  const layerDetail = ['draft', 'balanced', 'fine'].includes(input?.layerDetail) ? input.layerDetail : 'balanced';
+  const infillDensity = ['light', 'standard', 'strong', 'max'].includes(input?.infillDensity) ? input.infillDensity : 'standard';
+  const supportLevel = ['minimal', 'standard', 'complex'].includes(input?.supportLevel) ? input.supportLevel : 'standard';
+  const delivery = input?.delivery === 'pickup' ? 'pickup' : 'ship';
+  const quantity = Math.max(1, Math.round(safeParsePositiveNumber(input?.quantity, 1)));
+  const weight = Math.max(1, safeParsePositiveNumber(input?.weight, 1));
+  const rush = Boolean(input?.rush);
+  const designHelp = Boolean(input?.designHelp);
+  const promoCode = String(input?.promoCode || '').trim().toUpperCase();
+
+  const baseUnit = Math.max(5, weight * materialRatePerGram[material]);
+  const unitWithColor = baseUnit * colorMultiplier[colorProfile];
+  const unitWithFinish = unitWithColor * finishMultiplier[finish];
+  const unitWithDetail = unitWithFinish * layerDetailMultiplier[layerDetail];
+  const unitWithInfill = unitWithDetail * infillMultiplier[infillDensity];
+  const customizedUnit = unitWithInfill * supportLevelMultiplier[supportLevel];
+  const rushFee = rush ? customizedUnit * (rushMultiplier - 1) * quantity : 0;
+  const printCost = customizedUnit * quantity;
+  const designReviewFee = designHelp ? designHelpFee : 0;
+  const subtotal = printCost + rushFee + designReviewFee;
+  const setupHelpFee = subtotal < 25 ? 4 : 0;
+  const shipping = delivery === 'pickup' ? 0 : subtotal >= 90 ? 0 : 8;
+  const discountRate = promoCodes[promoCode] ?? 0;
+  const discount = subtotal * discountRate;
+  const total = subtotal + setupHelpFee + shipping - discount;
+
+  const leadTimeDays = rush
+    ? 'about 1–2 business days'
+    : finish === 'premium'
+      ? 'about 4–6 business days'
+      : 'about 2–4 business days';
+
+  return {
+    material,
+    colorProfile,
+    quantity,
+    weight,
+    finish,
+    layerDetail,
+    infillDensity,
+    supportLevel,
+    delivery,
+    useCase: allowedUseCases.has(input?.useCase) ? input.useCase : 'prototype',
+    rush,
+    designHelp,
+    promoCode,
+    leadTimeDays,
+    fileText: String(input?.fileText || '').slice(0, 2000),
+    printCost: Number(printCost.toFixed(2)),
+    rushFee: Number(rushFee.toFixed(2)),
+    designReviewFee: Number(designReviewFee.toFixed(2)),
+    setupHelpFee: Number(setupHelpFee.toFixed(2)),
+    shipping: Number(shipping.toFixed(2)),
+    discount: Number(discount.toFixed(2)),
+    total: Number(total.toFixed(2)),
+    projectName: String(input?.projectName || '').trim().slice(0, 120) || 'Untitled project',
+  };
+};
+
+const sanitizeOrderForClient = (order) => {
+  if (!order || typeof order !== 'object') {
+    return order;
+  }
+
+  const copy = JSON.parse(JSON.stringify(order));
+  delete copy.accessTokenHash;
+  if (copy.uploadedFile && typeof copy.uploadedFile === 'object') {
+    delete copy.uploadedFile.storedFileName;
+  }
+  return copy;
+};
 const persistOrder = (order) => {
   db.prepare(`
     INSERT INTO orders (id, created_at, updated_at, payload_json)
@@ -146,6 +330,19 @@ const saveOrderUpload = (orderId, filePayload) => {
 
   if (!buffer.length) {
     return undefined;
+  }
+
+  if (buffer.length > maxUploadBytes) {
+    throw new Error(`Uploaded file exceeds ${Math.round(maxUploadBytes / (1024 * 1024))}MB limit.`);
+  }
+
+  const extension = path.extname(originalName).toLowerCase();
+  if (!allowedUploadExtensions.has(extension)) {
+    throw new Error('Unsupported file type. Allowed: STL, 3MF, OBJ.');
+  }
+
+  if (!allowedUploadMimeTypes.has(mimeType)) {
+    throw new Error('Unsupported upload MIME type.');
   }
 
   const expectedSize = Number(filePayload.size || buffer.length);
@@ -341,13 +538,11 @@ const getMissionPlan = async (mission) => {
   }
 };
 
-const createOrder = ({ orderDetails, mission, customerEmail, uploadedFile }) => {
-  const id = `ML-${String(nextOrderNumber).padStart(4, '0')}`;
-  nextOrderNumber += 1;
-
+const createOrder = ({ id, orderDetails, mission, customerEmail, uploadedFile, accessTokenHash }) => {
+  const safeId = typeof id === 'string' && id ? id : createOrderId();
   const now = new Date().toISOString();
   const order = {
-    id,
+    id: safeId,
     status: 'file_review',
     note: 'Order confirmed. File review has started and we will update you soon.',
     createdAt: now,
@@ -356,11 +551,13 @@ const createOrder = ({ orderDetails, mission, customerEmail, uploadedFile }) => 
     mission,
     customerEmail,
     uploadedFile,
+    accessTokenHash,
   };
 
   persistOrder(order);
   return order;
 };
+
 
 const buildReceiptFromOrder = (order) => {
   const orderDetails = order.orderDetails || order.quote || {};
@@ -486,15 +683,32 @@ const hasOrderReviewAccess = (req) => {
   return isAdminAuthorized(req);
 };
 
+const hasOrderReadAccess = (req, order) => {
+  if (hasOrderReviewAccess(req)) {
+    return true;
+  }
+
+  const headerToken = req.headers['x-order-token'];
+  const queryToken = new URL(req.url, `http://${req.headers.host || `localhost:${port}`}`).searchParams.get('token');
+  const providedToken = String(headerToken || queryToken || '');
+  if (!providedToken || !order?.accessTokenHash) {
+    return false;
+  }
+
+  const providedHash = hashAccessToken(providedToken);
+  return safeEqual(providedHash, order.accessTokenHash);
+};
+
 const requireAdminAccess = (req, res) => {
   if (!adminUsername || !adminPassword) {
-    res.writeHead(404);
+    res.writeHead(404, buildSecurityHeaders(req));
     res.end('Not found');
     return false;
   }
 
   if (!isAdminAuthorized(req)) {
     res.writeHead(401, {
+      ...buildSecurityHeaders(req),
       'WWW-Authenticate': 'Basic realm="LeeLayer Admin", charset="UTF-8"',
     });
     res.end('Unauthorized');
@@ -504,17 +718,25 @@ const requireAdminAccess = (req, res) => {
   return true;
 };
 
-const sendJson = (res, statusCode, body) => {
+const sendJson = (req, res, statusCode, body) => {
   const payload = JSON.stringify(body);
   res.writeHead(statusCode, {
+    ...buildSecurityHeaders(req, 'application/json; charset=utf-8'),
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(payload),
+    'Cache-Control': 'no-store',
   });
   res.end(payload);
 };
 
-const serveStatic = (res, pathname) => {
+const serveStatic = (req, res, pathname) => {
   const safePath = pathname === '/' ? '/index.html' : pathname;
+
+  if (safePath.startsWith('/data/') || safePath === '/data' || safePath.includes('/.')) {
+    res.writeHead(404, buildSecurityHeaders(req));
+    res.end('Not found');
+    return;
+  }
   const resolved = path.resolve(rootDir, `.${safePath}`);
 
   if (!resolved.startsWith(rootDir)) {
@@ -525,19 +747,19 @@ const serveStatic = (res, pathname) => {
 
   fs.stat(resolved, (statErr, stats) => {
     if (statErr || !stats.isFile()) {
-      res.writeHead(404);
+      res.writeHead(404, buildSecurityHeaders(req));
       res.end('Not found');
       return;
     }
 
     const ext = path.extname(resolved).toLowerCase();
     const contentType = mimeTypes[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType });
+    res.writeHead(200, { ...buildSecurityHeaders(req, contentType), 'Content-Type': contentType });
 
     const stream = fs.createReadStream(resolved);
     stream.pipe(res);
     stream.on('error', () => {
-      res.writeHead(500);
+      res.writeHead(500, buildSecurityHeaders(req));
       res.end('Server error');
     });
   });
@@ -553,21 +775,29 @@ const server = http.createServer((req, res) => {
     }
 
     const target = requestUrl.pathname === '/admin' ? '/admin.html' : requestUrl.pathname;
-    serveStatic(res, target);
+    serveStatic(req, res, target);
     return;
   }
 
   if (requestUrl.pathname === '/api/orders' && req.method === 'GET') {
+    if (!checkRateLimit(req, 'orders-list', { limit: 120, windowMs: 15 * 60 * 1000 })) {
+      sendJson(req, res, 429, { error: 'Too many requests. Please try again shortly.' });
+      return;
+    }
     if (!hasOrderReviewAccess(req)) {
-      sendJson(res, 401, { error: 'Unauthorized.' });
+      sendJson(req, res, 401, { error: 'Unauthorized.' });
       return;
     }
 
-    sendJson(res, 200, { orders: getAllOrders() });
+    sendJson(req, res, 200, { orders: getAllOrders() });
     return;
   }
 
   if (requestUrl.pathname === '/api/orders' && req.method === 'POST') {
+    if (!checkRateLimit(req, 'orders-create', { limit: 40, windowMs: 15 * 60 * 1000 })) {
+      sendJson(req, res, 429, { error: 'Too many requests. Please try again shortly.' });
+      return;
+    }
     let raw = '';
     let tooLarge = false;
 
@@ -584,7 +814,7 @@ const server = http.createServer((req, res) => {
 
     req.on('end', () => {
       if (tooLarge) {
-        sendJson(res, 413, { error: 'Payload too large. Reduce file size and try again.' });
+        sendJson(req, res, 413, { error: 'Payload too large. Reduce file size and try again.' });
         return;
       }
 
@@ -592,29 +822,42 @@ const server = http.createServer((req, res) => {
       try {
         body = raw ? JSON.parse(raw) : {};
       } catch {
-        sendJson(res, 400, { error: 'Invalid JSON payload.' });
+        sendJson(req, res, 400, { error: 'Invalid JSON payload.' });
         return;
       }
 
       const incomingOrderDetails = body.order || body.quote;
       if (!incomingOrderDetails || typeof incomingOrderDetails !== 'object') {
-        sendJson(res, 400, { error: 'Field "order" is required.' });
+        sendJson(req, res, 400, { error: 'Field "order" is required.' });
         return;
       }
 
-      const mission = typeof body.mission === 'string' ? body.mission.trim() : '';
-      const customerEmail = typeof body.customerEmail === 'string' ? body.customerEmail.trim() : '';
-      const tentativeOrderId = `ML-${String(nextOrderNumber).padStart(4, '0')}`;
-      const uploadedFile = saveOrderUpload(tentativeOrderId, body.modelFile);
+      const mission = typeof body.mission === 'string' ? body.mission.trim().slice(0, 2000) : '';
+      const customerEmail = typeof body.customerEmail === 'string' ? body.customerEmail.trim().slice(0, 254) : '';
+      const computedOrderDetails = computeServerQuote(incomingOrderDetails);
+      const orderId = createOrderId();
+      let uploadedFile;
+      try {
+        uploadedFile = saveOrderUpload(orderId, body.modelFile);
+      } catch (uploadError) {
+        sendJson(req, res, 400, { error: uploadError?.message || 'Invalid upload payload.' });
+        return;
+      }
 
+      const accessToken = createAccessToken();
       const order = createOrder({
-        orderDetails: incomingOrderDetails,
+        id: orderId,
+        orderDetails: computedOrderDetails,
         mission,
         customerEmail,
         uploadedFile,
+        accessTokenHash: hashAccessToken(accessToken),
       });
 
-      sendJson(res, 201, { order });
+      sendJson(req, res, 201, {
+        order: sanitizeOrderForClient(order),
+        accessToken,
+      });
     });
 
     return;
@@ -622,26 +865,40 @@ const server = http.createServer((req, res) => {
 
   const orderMatch = requestUrl.pathname.match(/^\/api\/orders\/([A-Za-z0-9-]+)$/);
   if (orderMatch && req.method === 'GET') {
-    const order = getOrderById(orderMatch[1]);
-    if (!order) {
-      sendJson(res, 404, { error: 'Order not found.' });
+    if (!checkRateLimit(req, 'order-read', { limit: 180, windowMs: 15 * 60 * 1000 })) {
+      sendJson(req, res, 429, { error: 'Too many requests. Please try again shortly.' });
       return;
     }
 
-    sendJson(res, 200, { order });
+    const order = getOrderById(orderMatch[1]);
+    if (!order) {
+      sendJson(req, res, 404, { error: 'Order not found.' });
+      return;
+    }
+
+    if (!hasOrderReadAccess(req, order)) {
+      sendJson(req, res, 401, { error: 'Unauthorized.' });
+      return;
+    }
+
+    sendJson(req, res, 200, { order: sanitizeOrderForClient(order) });
     return;
   }
 
   const orderStatusMatch = requestUrl.pathname.match(/^\/api\/orders\/([A-Za-z0-9-]+)\/status$/);
   if (orderStatusMatch && req.method === 'PATCH') {
+    if (!checkRateLimit(req, 'order-status', { limit: 120, windowMs: 15 * 60 * 1000 })) {
+      sendJson(req, res, 429, { error: 'Too many requests. Please try again shortly.' });
+      return;
+    }
     if (!hasOrderReviewAccess(req)) {
-      sendJson(res, 401, { error: 'Unauthorized.' });
+      sendJson(req, res, 401, { error: 'Unauthorized.' });
       return;
     }
 
     const order = getOrderById(orderStatusMatch[1]);
     if (!order) {
-      sendJson(res, 404, { error: 'Order not found.' });
+      sendJson(req, res, 404, { error: 'Order not found.' });
       return;
     }
 
@@ -655,18 +912,18 @@ const server = http.createServer((req, res) => {
       try {
         body = raw ? JSON.parse(raw) : {};
       } catch {
-        sendJson(res, 400, { error: 'Invalid JSON payload.' });
+        sendJson(req, res, 400, { error: 'Invalid JSON payload.' });
         return;
       }
 
       const allowed = new Set(['file_review', 'fully_confirmed', 'canceled']);
       if (!allowed.has(body.status)) {
-        sendJson(res, 400, { error: 'Invalid status.' });
+        sendJson(req, res, 400, { error: 'Invalid status.' });
         return;
       }
 
       updateOrderStatus(order, body.status, body.note);
-      sendJson(res, 200, { order });
+      sendJson(req, res, 200, { order: sanitizeOrderForClient(order) });
     });
 
     return;
@@ -675,38 +932,48 @@ const server = http.createServer((req, res) => {
 
   const orderFileMatch = requestUrl.pathname.match(/^\/api\/orders\/([A-Za-z0-9-]+)\/file$/);
   if (orderFileMatch && req.method === 'GET') {
+    if (!checkRateLimit(req, 'order-file', { limit: 80, windowMs: 15 * 60 * 1000 })) {
+      sendJson(req, res, 429, { error: 'Too many requests. Please try again shortly.' });
+      return;
+    }
     if (!hasOrderReviewAccess(req)) {
-      sendJson(res, 401, { error: 'Unauthorized.' });
+      sendJson(req, res, 401, { error: 'Unauthorized.' });
       return;
     }
 
     const order = getOrderById(orderFileMatch[1]);
     if (!order) {
-      sendJson(res, 404, { error: 'Order not found.' });
+      sendJson(req, res, 404, { error: 'Order not found.' });
       return;
     }
 
     const file = readOrderUpload(order);
     if (!file) {
-      sendJson(res, 404, { error: 'Uploaded file not found for this order.' });
+      sendJson(req, res, 404, { error: 'Uploaded file not found for this order.' });
       return;
     }
 
     const stream = fs.createReadStream(file.absolutePath);
     const escapedName = encodeURIComponent(file.originalName).replace(/%20/g, '_');
     res.writeHead(200, {
+      ...buildSecurityHeaders(req, file.mimeType),
       'Content-Type': file.mimeType,
       'Content-Disposition': `attachment; filename="${escapedName}"`,
+      'Cache-Control': 'no-store',
     });
     stream.pipe(res);
     stream.on('error', () => {
-      res.writeHead(500);
+      res.writeHead(500, buildSecurityHeaders(req));
       res.end('File download failed.');
     });
     return;
   }
 
   if (requestUrl.pathname === '/api/mission-translate' && req.method === 'POST') {
+    if (!checkRateLimit(req, 'mission-translate', { limit: 50, windowMs: 15 * 60 * 1000 })) {
+      sendJson(req, res, 429, { error: 'Too many requests. Please try again shortly.' });
+      return;
+    }
     let raw = '';
     let tooLarge = false;
 
@@ -723,7 +990,7 @@ const server = http.createServer((req, res) => {
 
     req.on('end', async () => {
       if (tooLarge) {
-        sendJson(res, 413, { error: 'Payload too large.' });
+        sendJson(req, res, 413, { error: 'Payload too large.' });
         return;
       }
 
@@ -731,21 +998,21 @@ const server = http.createServer((req, res) => {
       try {
         body = raw ? JSON.parse(raw) : {};
       } catch {
-        sendJson(res, 400, { error: 'Invalid JSON payload.' });
+        sendJson(req, res, 400, { error: 'Invalid JSON payload.' });
         return;
       }
 
       const mission = typeof body.mission === 'string' ? body.mission.trim() : '';
       if (!mission) {
-        sendJson(res, 400, { error: 'Field "mission" is required.' });
+        sendJson(req, res, 400, { error: 'Field "mission" is required.' });
         return;
       }
 
       try {
         const plan = await getMissionPlan(mission);
-        sendJson(res, 200, plan);
+        sendJson(req, res, 200, plan);
       } catch {
-        sendJson(res, 500, { error: 'Mission translation failed.' });
+        sendJson(req, res, 500, { error: 'Mission translation failed.' });
       }
     });
 
@@ -753,11 +1020,11 @@ const server = http.createServer((req, res) => {
   }
 
   if (requestUrl.pathname === '/api/mission-translate' && req.method !== 'POST') {
-    sendJson(res, 405, { error: 'Method not allowed.' });
+    sendJson(req, res, 405, { error: 'Method not allowed.' });
     return;
   }
 
-  serveStatic(res, requestUrl.pathname);
+  serveStatic(req, res, requestUrl.pathname);
 });
 
 server.listen(port, host, () => {
@@ -765,7 +1032,7 @@ server.listen(port, host, () => {
   console.log(openAiApiKey
     ? `OpenAI integration enabled (model: ${openAiModel}).`
     : 'OpenAI integration disabled (set OPENAI_API_KEY to enable).');
-  console.log(`Order review API ready (set REVIEW_KEY, current default: ${reviewKey}).`);
+  console.log('Order review API ready (REVIEW_KEY configured).');
   console.log(`Order storage ready at ${dbPath}.`);
   console.log(`Upload storage ready at ${uploadsDir}.`);
   console.log(adminUsername && adminPassword

@@ -28,6 +28,7 @@ const orderStageLabel = {
 
 const params = new URLSearchParams(window.location.search);
 const orderId = params.get('orderId') ?? '';
+const orderToken = params.get('token') ?? '';
 
 const renderReceipt = (receipt) => {
   if (!receipt) {
@@ -75,13 +76,15 @@ const renderOrder = (order) => {
 };
 
 const fetchOrder = async () => {
-  if (!orderId) {
-    orderStatusNote.textContent = 'No order ID provided. Return to the order page and confirm an order first.';
+  if (!orderId || !orderToken) {
+    orderStatusNote.textContent = 'Missing secure tracking info. Use the exact status link from your order confirmation.';
     return;
   }
 
   try {
-    const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}`);
+    const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+      headers: orderToken ? { 'x-order-token': orderToken } : {},
+    });
     if (!response.ok) {
       throw new Error('Order status unavailable');
     }
