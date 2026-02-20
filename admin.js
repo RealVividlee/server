@@ -186,15 +186,9 @@ const renderOrdersList = (orders) => {
 
 const loadAllOrders = async () => {
   const reviewKey = getReviewKey();
-  if (!reviewKey) {
-    throw new Error('Enter your review key to load orders.');
-  }
+  const headers = reviewKey ? { 'x-review-key': reviewKey } : {};
 
-  const response = await fetch('/api/orders', {
-    headers: {
-      'x-review-key': reviewKey,
-    },
-  });
+  const response = await fetch('/api/orders', { headers });
   const data = await response.json();
 
   if (!response.ok) {
@@ -238,8 +232,8 @@ const updateOrderStatus = async (nextStatus) => {
   const orderId = getOrderId();
   const reviewKey = getReviewKey();
 
-  if (!orderId || !reviewKey) {
-    setStatus('Order ID and review key are required.');
+  if (!orderId) {
+    setStatus('Order ID is required.');
     return;
   }
 
@@ -249,7 +243,7 @@ const updateOrderStatus = async (nextStatus) => {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'x-review-key': reviewKey,
+      ...(reviewKey ? { 'x-review-key': reviewKey } : {}),
     },
     body: JSON.stringify({
       status: nextStatus,
@@ -273,16 +267,14 @@ const downloadSelectedOrderFile = async () => {
   const orderId = getOrderId();
   const reviewKey = getReviewKey();
 
-  if (!orderId || !reviewKey) {
-    setStatus('Order ID and review key are required.');
+  if (!orderId) {
+    setStatus('Order ID is required.');
     return;
   }
 
   setStatus(`Downloading uploaded file for ${orderId}...`);
   const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}/file`, {
-    headers: {
-      'x-review-key': reviewKey,
-    },
+    headers: reviewKey ? { 'x-review-key': reviewKey } : {},
   });
 
   if (!response.ok) {

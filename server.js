@@ -476,6 +476,16 @@ const isAdminAuthorized = (req) => {
   return safeEqual(username, adminUsername) && safeEqual(password, adminPassword);
 };
 
+
+const hasOrderReviewAccess = (req) => {
+  const key = req.headers['x-review-key'];
+  if (key === reviewKey) {
+    return true;
+  }
+
+  return isAdminAuthorized(req);
+};
+
 const requireAdminAccess = (req, res) => {
   if (!adminUsername || !adminPassword) {
     res.writeHead(404);
@@ -548,8 +558,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (requestUrl.pathname === '/api/orders' && req.method === 'GET') {
-    const key = req.headers['x-review-key'];
-    if (key !== reviewKey) {
+    if (!hasOrderReviewAccess(req)) {
       sendJson(res, 401, { error: 'Unauthorized.' });
       return;
     }
@@ -625,8 +634,7 @@ const server = http.createServer((req, res) => {
 
   const orderStatusMatch = requestUrl.pathname.match(/^\/api\/orders\/([A-Za-z0-9-]+)\/status$/);
   if (orderStatusMatch && req.method === 'PATCH') {
-    const key = req.headers['x-review-key'];
-    if (key !== reviewKey) {
+    if (!hasOrderReviewAccess(req)) {
       sendJson(res, 401, { error: 'Unauthorized.' });
       return;
     }
@@ -667,8 +675,7 @@ const server = http.createServer((req, res) => {
 
   const orderFileMatch = requestUrl.pathname.match(/^\/api\/orders\/([A-Za-z0-9-]+)\/file$/);
   if (orderFileMatch && req.method === 'GET') {
-    const key = req.headers['x-review-key'];
-    if (key !== reviewKey) {
+    if (!hasOrderReviewAccess(req)) {
       sendJson(res, 401, { error: 'Unauthorized.' });
       return;
     }
