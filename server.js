@@ -7,8 +7,12 @@ const crypto = require('crypto');
 
 const host = '0.0.0.0';
 const port = Number(process.env.PORT || 4173);
+const isProduction = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
 const rootDir = __dirname;
-const dataDir = path.join(rootDir, 'data');
+const defaultDataDir = isProduction
+  ? '/var/lib/leelayer'
+  : path.join(rootDir, 'data');
+const dataDir = path.resolve(process.env.DATA_DIR || defaultDataDir);
 const uploadsDir = path.join(dataDir, 'uploads');
 const dbPath = path.join(dataDir, 'orders.db');
 const openAiApiKey = process.env.OPENAI_API_KEY;
@@ -19,7 +23,6 @@ const maxUploadBytes = Number(process.env.MAX_UPLOAD_BYTES || 8 * 1024 * 1024);
 const adminUsername = process.env.ADMIN_USERNAME || '';
 const adminPassword = process.env.ADMIN_PASSWORD || '';
 const orderTokenSecret = process.env.ORDER_TOKEN_SECRET || '';
-const isProduction = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
 
 if (isProduction && reviewKey === 'local-review') {
   throw new Error('REVIEW_KEY must be set to a strong value in production.');
@@ -1033,6 +1036,7 @@ server.listen(port, host, () => {
     ? `OpenAI integration enabled (model: ${openAiModel}).`
     : 'OpenAI integration disabled (set OPENAI_API_KEY to enable).');
   console.log('Order review API ready (REVIEW_KEY configured).');
+  console.log(`Data directory: ${dataDir}`);
   console.log(`Order storage ready at ${dbPath}.`);
   console.log(`Upload storage ready at ${uploadsDir}.`);
   console.log(adminUsername && adminPassword
