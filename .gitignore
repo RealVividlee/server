@@ -1,0 +1,18 @@
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/uploads/*
+# secrets / runtime data
+.env
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# node
+node_modules/
+
+# system / infra (keep out of repo)
+*.pem
+*.key

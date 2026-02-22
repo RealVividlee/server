@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Admin | LeeLayer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html">LeeLayer</a>
+        <nav aria-label="Primary">
+          <ul class="nav-list">
+            <li><a href="order.html">Place an order</a></li>
+            <li><a href="order-status.html">Order status</a></li>
+            <li><a href="admin.html">Admin</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="container">
+          <h2>Simple order admin</h2>
+          <p class="quote-intro">See all orders, select one, then approve or cancel it.</p>
+
+          <div class="admin-grid">
+            <article class="admin-card">
+              <div class="admin-orders-header">
+                <h3>All orders</h3>
+                <button type="button" id="refreshOrders" class="secondary-btn">Refresh list</button>
+              </div>
+              <ul id="ordersList" class="orders-list">
+                <li class="orders-list-empty">No orders yet.</li>
+              </ul>
+            </article>
+
+            <form id="admin-form" class="admin-card">
+              <label>
+                Order ID
+                <input type="text" id="orderId" placeholder="ML-0001" required />
+              </label>
+
+              <label>
+                Review key
+                <input type="password" id="reviewKey" placeholder="local-review" required />
+              </label>
+
+              <label>
+                Note (optional)
+                <input type="text" id="adminNote" placeholder="Approved after file review" />
+              </label>
+
+              <div class="admin-actions">
+                <button type="button" data-action="load">Load order</button>
+                <button type="button" class="secondary-btn" data-action="review">Set file review</button>
+                <button type="button" data-action="approve">Approve</button>
+                <button type="button" class="danger-btn" data-action="cancel">Cancel</button>
+                <button type="button" class="secondary-btn" id="downloadOrderFile">Download uploaded file</button>
+              </div>
+
+              <p class="draft-status" id="admin-status" aria-live="polite">Ready.</p>
+            </form>
+          </div>
+
+          <article class="admin-card admin-details-card">
+            <div class="admin-orders-header">
+              <h3>Selected order details</h3>
+              <button type="button" id="toggleView" class="secondary-btn">Switch to simplified view</button>
+            </div>
+            <pre id="admin-order-json" class="admin-json">Select or load an order to see details.</pre>
+            <div id="admin-order-simple" class="admin-simple" hidden>
+              <p><strong>Order:</strong> <span id="simple-id">—</span></p>
+              <p><strong>Status:</strong> <span id="simple-status">—</span></p>
+              <p><strong>Customer email:</strong> <span id="simple-email">—</span></p>
+              <p><strong>Project:</strong> <span id="simple-project">—</span></p>
+              <p><strong>Total:</strong> <span id="simple-total">—</span></p>
+              <p><strong>Mission:</strong> <span id="simple-mission">—</span></p>
+              <p><strong>Created:</strong> <span id="simple-created">—</span></p>
+              <p><strong>Updated:</strong> <span id="simple-updated">—</span></p>
+              <p><strong>Note:</strong> <span id="simple-note">—</span></p>
+              <p><strong>Uploaded file:</strong> <span id="simple-file">—</span></p>
+            </div>
+          </article>
+
+          <article class="admin-card admin-receipt-card">
+            <h3>Admin receipt</h3>
+            <p class="receipt-meta" id="adminReceiptMeta">Receipt will appear once an order is fully confirmed.</p>
+            <div class="receipt-grid">
+              <p><strong>Receipt ID:</strong> <span id="adminReceiptId">—</span></p>
+              <p><strong>Issued:</strong> <span id="adminReceiptIssued">—</span></p>
+              <p><strong>Order:</strong> <span id="adminReceiptOrder">—</span></p>
+              <p><strong>Email:</strong> <span id="adminReceiptEmail">—</span></p>
+              <p><strong>Project:</strong> <span id="adminReceiptProject">—</span></p>
+              <p><strong>Material:</strong> <span id="adminReceiptMaterial">—</span></p>
+              <p><strong>Quantity:</strong> <span id="adminReceiptQuantity">—</span></p>
+              <p><strong>Total:</strong> <span id="adminReceiptTotal">—</span></p>
+            </div>
+            <ul class="receipt-lines" id="adminReceiptLines"></ul>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> LeeLayer · Internal admin view.</p>
+      </div>
+    </footer>
+
+    <script src="admin.js"></script>
+  </body>
+</html>

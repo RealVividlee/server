@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Status | LeeLayer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html">LeeLayer</a>
+        <nav aria-label="Primary">
+          <ul class="nav-list">
+            <li><a href="how-it-works.html">How it works</a></li>
+            <li><a href="about.html">About us</a></li>
+            <li><a href="order.html">Place an order</a></li>
+            <li><a href="materials.html">Materials Lab</a></li>
+            <li><a href="inventory.html">Inventory</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="container">
+          <h2>Order status</h2>
+          <p class="quote-intro">Track your order as it moves from file review to full confirmation.</p>
+
+          <section class="order-status-card" id="orderStatusCard">
+            <p><strong>Order ID:</strong> <span id="orderIdValue">—</span></p>
+            <p><strong>Current stage:</strong> <span id="orderStageValue">—</span></p>
+            <p id="orderStatusNote">Looking up your order status.</p>
+            <div class="form-actions">
+              <button type="button" id="refreshOrderStatus">Refresh status</button>
+              <a class="cta secondary-link" href="order.html">Back to order page</a>
+            </div>
+          </section>
+
+          <section class="receipt-card" id="clientReceiptCard" hidden>
+            <h3>Receipt</h3>
+            <p class="receipt-meta" id="clientReceiptMeta">Receipt will appear after final approval.</p>
+            <div class="receipt-grid">
+              <p><strong>Receipt ID:</strong> <span id="clientReceiptId">—</span></p>
+              <p><strong>Issued:</strong> <span id="clientReceiptIssued">—</span></p>
+              <p><strong>Order:</strong> <span id="clientReceiptOrder">—</span></p>
+              <p><strong>Email:</strong> <span id="clientReceiptEmail">—</span></p>
+              <p><strong>Project:</strong> <span id="clientReceiptProject">—</span></p>
+              <p><strong>Material:</strong> <span id="clientReceiptMaterial">—</span></p>
+              <p><strong>Quantity:</strong> <span id="clientReceiptQuantity">—</span></p>
+              <p><strong>Total:</strong> <span id="clientReceiptTotal">—</span></p>
+            </div>
+            <ul class="receipt-lines" id="clientReceiptLines"></ul>
+          </section>
+
+          <div class="quote-next-steps" id="quote-next-steps">
+            <h3>What happens next</h3>
+            <ol>
+              <li>We review your file and use case details.</li>
+              <li>We confirm final print settings by email.</li>
+              <li>Once approved, we print and message updates.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© 2026 LeeLayer · Small-batch 3D printing with real human support.</p>
+      </div>
+    </footer>
+
+    <script src="order-status.js"></script>
+  </body>
+</html>
