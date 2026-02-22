@@ -532,9 +532,9 @@ const serveStatic = (res, pathname) => {
     return;
   }
 
-  const resolved = path.resolve(rootDir, `.${safePath}`);
+  const resolved = path.resolve(publicDir, `.${safePath}`);
 
-  if (!resolved.startsWith(rootDir)) {
+  if (!resolved.startsWith(publicDir)) {
     res.writeHead(403);
     res.end('Forbidden');
     return;
