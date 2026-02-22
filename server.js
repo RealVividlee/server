@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const host = '0.0.0.0';
 const port = Number(process.env.PORT || 4173);
 const rootDir = __dirname;
+const publicDir = path.join(rootDir, 'public');
 const dataDir = path.join(rootDir, 'data');
 const uploadsDir = path.join(dataDir, 'uploads');
 const dbPath = path.join(dataDir, 'orders.db');
@@ -515,6 +516,22 @@ const sendJson = (res, statusCode, body) => {
 
 const serveStatic = (res, pathname) => {
   const safePath = pathname === '/' ? '/index.html' : pathname;
+// 🔒 BLOCK sensitive paths at app level
+  if (
+    safePath.startsWith('/data/') ||
+    safePath === '/server.js' ||
+    safePath === '/package.json' ||
+    safePath === '/package-lock.json' ||
+    safePath.endsWith('.env') ||
+    safePath.endsWith('.db') ||
+    safePath.endsWith('.sqlite') ||
+    safePath.endsWith('.log')
+  ) {
+    res.writeHead(404);
+    res.end('Not found');
+    return;
+  }
+
   const resolved = path.resolve(rootDir, `.${safePath}`);
 
   if (!resolved.startsWith(rootDir)) {
