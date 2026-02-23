@@ -1302,3 +1302,39 @@ button:hover {
     grid-template-columns: 1fr;
   }
 }
+
+.gallery-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.gallery-card {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #151a23;
+}
+
+.gallery-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: #0f131a;
+}
+
+.gallery-card figcaption {
+  padding: 0.6rem 0.7rem 0.7rem;
+  color: var(--ink-light);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 920px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

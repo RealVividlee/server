@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Grip print mockup</title>
+  <desc id="desc">Stylized flexible TPU grip pattern.</desc>
+  <rect width="1200" height="1200" fill="#0b1324"/>
+  <rect x="240" y="240" width="720" height="720" rx="110" fill="#0ea5e9"/>
+  <g fill="#67e8f9">
+    <circle cx="400" cy="400" r="56"/>
+    <circle cx="600" cy="400" r="56"/>
+    <circle cx="800" cy="400" r="56"/>
+    <circle cx="400" cy="600" r="56"/>
+    <circle cx="600" cy="600" r="56"/>
+    <circle cx="800" cy="600" r="56"/>
+    <circle cx="400" cy="800" r="56"/>
+    <circle cx="600" cy="800" r="56"/>
+    <circle cx="800" cy="800" r="56"/>
+  </g>
+</svg>
