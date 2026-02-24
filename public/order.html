@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Place an Order | LeeLayer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html">LeeLayer</a>
+        <nav aria-label="Primary">
+          <ul class="nav-list">
+            <li><a href="how-it-works.html">How it works</a></li>
+            <li><a href="about.html">About us</a></li>
+            <li><a href="order.html">Place an order</a></li>
+            <li><a href="materials.html">Materials Lab</a></li>
+            <li><a href="inventory.html">Inventory</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="quote">
+        <div class="container">
+          <h2>Place your order</h2>
+          <p class="quote-intro">No big minimums. Tell us what you need and place your order instantly.</p>
+
+          <section class="mission-lab mission-lab-featured" aria-live="polite">
+            <p class="mission-kicker">Featured</p>
+            <h3>Mission translator (plain English → print plan)</h3>
+            <p class="option-lab-copy">Describe what your part must survive, and we'll auto-tune the order settings before you fill the form.</p>
+            <label>
+              Translation mode
+              <select id="missionMode">
+                <option value="auto">Auto (AI first, fallback to rules)</option>
+                <option value="ai">AI only</option>
+                <option value="rules">Rules only</option>
+              </select>
+            </label>
+            <p class="mission-source" id="missionSource">Current mode: Auto (AI first, fallback to rules)</p>
+            <label>
+              Describe your mission
+              <textarea id="missionInput" rows="3" placeholder="Example: Needs to survive outdoor heat, hold weight, and look clean for a client demo."></textarea>
+            </label>
+            <div class="form-actions">
+              <button type="button" id="translateMission">Translate mission</button>
+              <button type="button" id="applyMissionOption" class="secondary-btn">Apply translated plan</button>
+            </div>
+            <div class="mission-result" id="missionResult">No mission translated yet.</div>
+          </section>
+
+          <div class="quote-layout">
+            <div class="quote-main">
+              <form class="quote-form" id="quote-form">
+                <label>
+                  Project name
+                  <input type="text" id="projectName" name="projectName" placeholder="e.g., Soap Mold Handle" required />
+                </label>
+
+                <label>
+                  Material
+                  <select id="material" name="material" required>
+                    <option value="PLA">PLA (easy + affordable)</option>
+                    <option value="PETG">PETG (durable / outdoor)</option>
+                    <option value="ABS">ABS (high-temp enclosure needed)</option>
+                    <option value="TPU">TPU (flexible)</option>
+                  </select>
+                </label>
+
+                <label>
+                  Color profile
+                  <select id="colorProfile" name="colorProfile" required>
+                    <option value="standard">Standard color</option>
+                    <option value="matte">Matte</option>
+                    <option value="silk">Silk / glossy specialty</option>
+                    <option value="translucent">Translucent</option>
+                    <option value="custom">Custom color match</option>
+                  </select>
+                </label>
+
+                <label>
+                  Quantity
+                  <input type="number" id="quantity" name="quantity" value="1" min="1" max="100" required />
+                </label>
+
+                <label>
+                  Estimated print weight (grams)
+                  <input type="number" id="weight" name="weight" value="60" min="5" max="1500" required />
+                  <small class="field-help">Not sure? Keep the default and we will fine-tune after file review.</small>
+                </label>
+
+                <label>
+                  Finish level
+                  <select id="finish" name="finish" required>
+                    <option value="standard">Standard</option>
+                    <option value="premium">Premium cleanup</option>
+                  </select>
+                  <small class="field-help">Standard keeps visible print lines. Premium includes extra cleanup for smoother parts.</small>
+                </label>
+
+                <fieldset class="customization-fieldset">
+                  <legend>Print customization (fine tune after mission translation)</legend>
+                  <label>
+                    Surface detail
+                    <select id="layerDetail" name="layerDetail">
+                      <option value="draft">Draft (fastest)</option>
+                      <option value="balanced" selected>Balanced</option>
+                      <option value="fine">Fine detail</option>
+                    </select>
+                  </label>
+                  <label>
+                    Infill density
+                    <select id="infillDensity" name="infillDensity">
+                      <option value="light">Light 15%</option>
+                      <option value="standard" selected>Standard 25%</option>
+                      <option value="strong">Strong 40%</option>
+                      <option value="max">Max strength 60%</option>
+                    </select>
+                  </label>
+                  <label>
+                    Support complexity
+                    <select id="supportLevel" name="supportLevel">
+                      <option value="minimal">Minimal supports</option>
+                      <option value="standard" selected>Standard supports</option>
+                      <option value="complex">Complex supports</option>
+                    </select>
+                  </label>
+                </fieldset>
+
+                <label>
+                  What is this print for?
+                  <select id="useCase" name="useCase" required>
+                    <option value="prototype">Prototype</option>
+                    <option value="replacement">Replacement part</option>
+                    <option value="display">Display model</option>
+                    <option value="gift">Gift / personal project</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+
+                <fieldset class="delivery-fieldset">
+                  <legend>Delivery method</legend>
+                  <label class="choice-row">
+                    <input type="radio" name="delivery" value="ship" checked />
+                    Ship to me
+                  </label>
+                  <label class="choice-row">
+                    <input type="radio" name="delivery" value="pickup" />
+                    Local pickup (free)
+                  </label>
+                </fieldset>
+
+                <label>
+                  Upload 3D file (optional)
+                  <input type="file" id="modelFile" name="modelFile" accept=".stl,.obj,.3mf,.png,.jpg,.jpeg,.pdf" />
+                  <small class="field-help">No model file yet? Upload a photo, sketch, or reference PDF.</small>
+                </label>
+
+                <label>
+                  Email for follow-up
+                  <input type="email" id="email" name="email" placeholder="you@example.com" required />
+                </label>
+
+                <label>
+                  Promo code (optional)
+                  <input type="text" id="promoCode" name="promoCode" placeholder="WELCOME10" maxlength="20" />
+                </label>
+
+                <p class="promo-status" id="promo-status" aria-live="polite">Try WELCOME10 or MAKER5.</p>
+
+                <label class="checkbox-row">
+                  <input type="checkbox" id="rush" name="rush" />
+                  Rush production (1–2 business days, +35%)
+                </label>
+
+                <label class="checkbox-row">
+                  <input type="checkbox" id="designHelp" name="designHelp" />
+                  Need printability/design review (+$12)
+                </label>
+
+                <div class="form-actions">
+                  <button type="submit">Confirm estimate</button>
+                  <button type="button" id="clearDraft" class="secondary-btn">Clear saved draft</button>
+                </div>
+              </form>
+
+              <p class="draft-status" id="draft-status" aria-live="polite">Draft is saved automatically in this browser.</p>
+            </div>
+
+            <aside class="live-estimate" aria-live="polite">
+              <h3>Live estimate preview (updates instantly)</h3>
+              <p class="live-estimate-value" id="live-estimate-value">—</p>
+              <p class="live-estimate-time" id="live-estimate-time">Add valid project details to preview your estimate.</p>
+              <p class="live-estimate-meta" id="live-estimate-meta">Includes print cost, setup fee, and delivery.</p>
+              <ul class="live-breakdown" id="live-breakdown">
+                <li>Print cost: —</li>
+                <li>Setup fee: —</li>
+                <li>Shipping: —</li>
+              </ul>
+            </aside>
+          </div>
+
+
+
+
+
+
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> LeeLayer · Small-batch 3D printing with real human support.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
