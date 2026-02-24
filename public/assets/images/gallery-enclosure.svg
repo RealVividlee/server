@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Enclosure print mockup</title>
+  <desc id="desc">Stylized electronics enclosure with vent slats.</desc>
+  <rect width="1200" height="1200" fill="#0f172a"/>
+  <rect x="210" y="300" width="780" height="560" rx="48" fill="#475569"/>
+  <rect x="260" y="350" width="680" height="460" rx="30" fill="#64748b"/>
+  <g fill="#cbd5e1">
+    <rect x="320" y="450" width="560" height="18" rx="8"/>
+    <rect x="320" y="500" width="560" height="18" rx="8"/>
+    <rect x="320" y="550" width="560" height="18" rx="8"/>
+    <rect x="320" y="600" width="560" height="18" rx="8"/>
+  </g>
+</svg>

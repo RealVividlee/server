@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Figurine print mockup</title>
+  <desc id="desc">Stylized display figurine silhouette.</desc>
+  <rect width="1200" height="1200" fill="#111827"/>
+  <ellipse cx="600" cy="980" rx="250" ry="80" fill="#1f2937"/>
+  <circle cx="600" cy="420" r="150" fill="#f59e0b"/>
+  <path d="M420 820c0-130 80-230 180-230s180 100 180 230z" fill="#fbbf24"/>
+  <rect x="500" y="770" width="200" height="160" rx="40" fill="#fcd34d"/>
+</svg>
