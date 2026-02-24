@@ -10,6 +10,7 @@
   --radius: 14px;
   --shadow: 0 14px 28px rgba(0, 0, 0, 0.38);
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --card-pop-shadow: 0 16px 28px rgba(5, 8, 15, 0.42);
 }
 
 
@@ -23,6 +24,31 @@ body {
   color: var(--ink);
   background: var(--bg);
   line-height: 1.5;
+  background-image: radial-gradient(circle at 10% -10%, rgba(124, 156, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 85% 10%, rgba(125, 214, 255, 0.08), transparent 28%);
+}
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse-border {
+  0%,
+  100% {
+    border-color: var(--line);
+  }
+
+  50% {
+    border-color: #435a8f;
+  }
 }
 
 .container {
@@ -129,6 +155,75 @@ button:hover {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 1rem;
+}
+
+.hero-card,
+.page-links-grid article,
+.steps article,
+.beginner-grid article,
+.samples-grid article,
+.option-card,
+.quote-form,
+.live-estimate,
+.mission-lab,
+.quote-next-steps,
+.faq-grid details,
+.inventory-block,
+.material-card,
+.variant-card,
+.admin-card,
+.receipt-card,
+.admin-receipt-card,
+.gallery-card,
+.order-status-card {
+  animation: card-rise 700ms var(--ease-smooth) both;
+  transition: transform 240ms var(--ease-smooth), box-shadow 240ms var(--ease-smooth), border-color 240ms ease;
+}
+
+.hero-card:hover,
+.page-links-grid article:hover,
+.steps article:hover,
+.beginner-grid article:hover,
+.samples-grid article:hover,
+.material-card:hover,
+.variant-card:hover,
+.inventory-block:hover,
+.gallery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-pop-shadow);
+  border-color: #435a8f;
+}
+
+.page-links-grid > :nth-child(2),
+.steps > :nth-child(2),
+.beginner-grid > :nth-child(2),
+.samples-grid > :nth-child(2),
+.materials-grid > :nth-child(2),
+.gallery-grid > :nth-child(2),
+.faq-grid > :nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.page-links-grid > :nth-child(3),
+.steps > :nth-child(3),
+.beginner-grid > :nth-child(3),
+.materials-grid > :nth-child(3),
+.gallery-grid > :nth-child(3) {
+  animation-delay: 170ms;
+}
+
+.page-links-grid > :nth-child(4),
+.gallery-grid > :nth-child(4),
+.option-cards > :nth-child(2) {
+  animation-delay: 250ms;
+}
+
+.option-cards > :nth-child(3),
+.gallery-grid > :nth-child(5),
+.gallery-grid > :nth-child(6),
+.gallery-grid > :nth-child(7),
+.gallery-grid > :nth-child(8) {
+  animation-delay: 320ms;
 }
 
 .option-lab-header {
@@ -910,6 +1005,7 @@ button:hover {
   border-radius: var(--radius);
   padding: 1rem;
   box-shadow: var(--shadow);
+  animation: card-rise 700ms var(--ease-smooth) both, pulse-border 5.5s ease-in-out infinite;
 }
 
 
