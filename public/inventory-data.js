@@ -1,7 +1,7 @@
 // Edit this file to update live inventory shown on inventory.html.
 // Tip: duplicate existing entries and adjust name/notes/qty/status.
 window.INVENTORY_DATA = {
-  updatedAt: '2026-02-17',
+  updatedAt: '2026-02-24',
   filament: [
     { name: 'PLA - Matte Black', qty: 6, unit: 'spools', status: 'in_stock', notes: 'Primary prototype filament' },
     { name: 'PLA - Silk Copper', qty: 2, unit: 'spools', status: 'low', notes: 'Display and gift projects' },
@@ -10,18 +10,19 @@ window.INVENTORY_DATA = {
     { name: 'TPU 95A - Black', qty: 3, unit: 'spools', status: 'in_stock', notes: 'Flexible grips and bumpers' },
   ],
   printers: [
-    { name: 'Bambu Lab X1C', qty: 1, unit: 'printer', status: 'in_stock', notes: 'Main production machine' },
-    { name: 'Bambu Lab P1S', qty: 1, unit: 'printer', status: 'in_stock', notes: 'Secondary throughput' },
+    { name: 'Bambu Lab P1S', qty: 1, unit: 'printer', status: 'in_stock', notes: 'Primary Bambu production machine' },
+    { name: 'AnkerMake M5C', qty: 1, unit: 'printer', status: 'in_stock', notes: 'Secondary production machine' },
   ],
   buildPlates: [
-    { name: 'Textured PEI Plate', qty: 3, unit: 'plates', status: 'in_stock', notes: 'General purpose' },
-    { name: 'Smooth PEI Plate', qty: 1, unit: 'plates', status: 'low', notes: 'Display-face first layers' },
-    { name: 'Engineering Plate', qty: 1, unit: 'plates', status: 'in_stock', notes: 'High-temp material runs' },
+    { name: 'Textured PEI Plate (P1S)', qty: 1, unit: 'plate', status: 'in_stock', notes: 'Only plate for P1S' },
+    { name: 'Textured PEI Plate (M5C)', qty: 1, unit: 'plate', status: 'in_stock', notes: 'Only plate for M5C' },
   ],
   nozzles: [
-    { name: '0.4mm Hardened Steel', qty: 4, unit: 'nozzles', status: 'in_stock', notes: 'Default daily nozzle' },
-    { name: '0.6mm Hardened Steel', qty: 2, unit: 'nozzles', status: 'in_stock', notes: 'Faster structural prints' },
-    { name: '0.2mm Stainless', qty: 1, unit: 'nozzles', status: 'low', notes: 'Fine detail parts' },
+    { name: 'P1S 0.2mm Stainless Steel', qty: 1, unit: 'nozzle', status: 'in_stock', notes: 'Fine detail parts' },
+    { name: 'P1S 0.4mm Stainless Steel', qty: 1, unit: 'nozzle', status: 'in_stock', notes: 'Standard stainless setup' },
+    { name: 'P1S 0.6mm Hardened Steel', qty: 1, unit: 'nozzle', status: 'in_stock', notes: 'Faster structural prints' },
+    { name: 'M5C 0.4mm Brass', qty: 1, unit: 'nozzle', status: 'in_stock', notes: 'Default M5C nozzle' },
+    { name: 'M5C 0.8mm Brass', qty: 1, unit: 'nozzle', status: 'in_stock', notes: 'Large line-width / speed setup' },
   ],
   ams: {
     enabled: true,

@@ -1,6 +1,7 @@
 const inventoryUpdatedAt = document.getElementById('inventoryUpdatedAt');
 const inventorySections = document.getElementById('inventorySections');
 const amsSummary = document.getElementById('amsSummary');
+let inventorySignature = '';
 
 const filamentStatusLabel = {
   in_stock: 'In stock',
@@ -54,8 +55,7 @@ const renderTable = (sectionKey, title, items, classes = 'inventory-block') => {
     </section>`;
 };
 
-const renderInventory = () => {
-  const data = window.INVENTORY_DATA;
+const renderInventory = (data) => {
   if (!data || !inventorySections || !amsSummary) {
     return;
   }
@@ -89,4 +89,27 @@ const renderInventory = () => {
     <p>${escapeHtml(ams.notes ?? '')}</p>`;
 };
 
-renderInventory();
+const applyDataIfChanged = (data) => {
+  const signature = JSON.stringify(data);
+  if (signature === inventorySignature) {
+    return;
+  }
+
+  inventorySignature = signature;
+  renderInventory(data);
+};
+
+const refreshInventory = async () => {
+  try {
+    const response = await fetch(`inventory-data.js?ts=${Date.now()}`, { cache: 'no-store' });
+    const source = await response.text();
+    const scopedWindow = {};
+    Function('window', source)(scopedWindow);
+    applyDataIfChanged(scopedWindow.INVENTORY_DATA);
+  } catch {
+    // Keep the currently rendered inventory if refresh fails.
+  }
+};
+
+applyDataIfChanged(window.INVENTORY_DATA);
+setInterval(refreshInventory, 5000);
